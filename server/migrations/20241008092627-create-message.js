@@ -18,7 +18,7 @@ module.exports = {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       },
-      senderId: {
+      userId: {
         type: Sequelize.INTEGER,allowNull: false,
         references: {
           model: 'Users',
@@ -28,7 +28,8 @@ module.exports = {
         onUpdate: 'CASCADE'
       },
       message_text: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,

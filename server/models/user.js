@@ -11,8 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      User.hasMany(models.Room, { foreignKey: 'userId' })
-      User.hasMany(models.Message, { foreignKey: 'senderId' })
+      User.hasMany(models.Message, { foreignKey: 'userId' })
     }
   }
   User.init({
@@ -66,6 +65,9 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'User',
   });
   User.beforeCreate(user => {
+    user.password = hashPassword(user.password);
+  });
+  User.beforeUpdate(user => {
     user.password = hashPassword(user.password);
   });
   return User;

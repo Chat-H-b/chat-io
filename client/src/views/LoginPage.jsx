@@ -4,7 +4,7 @@ import Toastify from 'toastify-js';
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Vector.png"
 
-export default function Login({ Url }) {
+export default function Login({socket}) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -13,10 +13,14 @@ export default function Login({ Url }) {
         e.preventDefault();
 
         try {
-            const { data } = await axios.post(`${Url}/login`, { email, password });
+            const { data } = await axios.post(`http://localhost:3000/login`, { email, password });
+
+            console.log(data);
+            
             localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("username", data.payload.username);
            
-           //localStorage.setItem("email", email)
+        //    localStorage.setItem("email", email)
             
             navigate("/");
             Toastify({
