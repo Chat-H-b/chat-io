@@ -7,14 +7,14 @@ import logo from "../assets/Vector.png"
 export default function Login({ }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
 
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            // const { data } = await axios.post(`https://h8-phase2-gc.vercel.app/apis/login`, { email, password });
-            // localStorage.setItem("access_token", data.data.access_token);
-            // navigate("/");
+            const { data } = await axios.post(`http://localhost:3000/login`, { email, password });
+            localStorage.setItem("access_token", data.access_token);
+            navigate("/");
 
             Toastify({
                 text: "Login success",
@@ -29,7 +29,7 @@ export default function Login({ }) {
             }).showToast();
         } catch (error) {
             Toastify({
-                text: error.response.data.message,
+                text: "",
                 duration: 3000,
                 newWindow: true,
                 close: true,

@@ -13,8 +13,8 @@ export default function Register({ }) {
     async function handleRegister(e) {
         e.preventDefault();
         try {
-            // const body = { email, password, username };
-            // const { data } = await axios.post("http://localhost:3000/register/", body);
+            const body = { email, password, username };
+            const { data } = await axios.post("http://localhost:3000/register", body);
 
             navigate("/login");
             Toastify({
@@ -33,7 +33,7 @@ export default function Register({ }) {
         } catch (error) {
             console.log(error);
             Toastify({
-                text: error.response.data.message,
+                text: error.message,
                 duration: 3000,
                 newWindow: true,
                 close: true,
