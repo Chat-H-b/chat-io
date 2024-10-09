@@ -3,7 +3,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 const path = require("path");
-
+require('dotenv').config()
 //import controller
 const userController = require("./controllers/userController");
 const roomController = require("./controllers/roomController");
@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: false }));
 app.post("/register", userController.register);
 app.post("/login", userController.login);
 app.use(authentication);
+app.get("/room", roomController.readRoom);
 app.get("/chat/:roomId", messageController.readMessage);
 app.post("/chat/:roomId", messageController.createMessage);
 

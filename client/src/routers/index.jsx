@@ -8,6 +8,7 @@ import Toastify from "toastify-js";
 const socket = io("http://localhost:3000", {
   autoConnect: false,
 });
+const url = "http://localhost:3000";
 
 const router = createBrowserRouter([
   {
@@ -37,7 +38,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <Home socket={socket} />,
+    element: <Home socket={socket} url={url} />,
     loader: () => {
       if (!localStorage.access_token || !localStorage.username) {
         Toastify({
