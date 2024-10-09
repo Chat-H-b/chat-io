@@ -4,46 +4,48 @@ import Toastify from 'toastify-js';
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Vector.png"
 
-export default function Login({ }) {
+export default function Login({ Url }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
     async function handleLogin(e) {
         e.preventDefault();
-        localStorage.setItem("email", email)
-        navigate("/")
 
-        // try {
+        try {
+            const { data } = await axios.post(`${Url}/login`, { email, password });
+            localStorage.setItem("access_token", data.access_token);
+           
+           //localStorage.setItem("email", email)
             
-        //     // const { data } = await axios.post(`https://h8-phase2-gc.vercel.app/apis/login`, { email, password });
-        //     // localStorage.setItem("access_token", data.data.access_token);
-        //     // navigate("/");
+            navigate("/");
+            Toastify({
+                text: "Login success",
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "bottom", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: { background: "#008000" },
+                onClick: function () { }, // Callback after click
+            }).showToast();
+        } catch (error) {
+            console.log(error);
+            Toastify({
+                text: "",
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "bottom", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: { background: "#FF0000" },
+                onClick: function () { }, // Callback after click
+            }).showToast();
+        }
 
-        //     Toastify({
-        //         text: "Login success",
-        //         duration: 3000,
-        //         newWindow: true,
-        //         close: true,
-        //         gravity: "bottom", // `top` or `bottom`
-        //         position: "right", // `left`, `center` or `right`
-        //         stopOnFocus: true, // Prevents dismissing of toast on hover
-        //         style: { background: "#008000" },
-        //         onClick: function () { }, // Callback after click
-        //     }).showToast();
-        // } catch (error) {
-        //     Toastify({
-        //         text: error.response.data.message,
-        //         duration: 3000,
-        //         newWindow: true,
-        //         close: true,
-        //         gravity: "bottom", // `top` or `bottom`
-        //         position: "right", // `left`, `center` or `right`
-        //         stopOnFocus: true, // Prevents dismissing of toast on hover
-        //         style: { background: "#FF0000" },
-        //         onClick: function () { }, // Callback after click
-        //     }).showToast();
-        // }
+     
     }
 
     return (

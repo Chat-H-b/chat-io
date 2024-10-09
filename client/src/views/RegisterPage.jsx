@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Toastify from "toastify-js";
 import logo from "../assets/Vector.png";
 
-export default function Register({ }) {
+export default function Register({ Url }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
@@ -13,8 +13,8 @@ export default function Register({ }) {
     async function handleRegister(e) {
         e.preventDefault();
         try {
-            // const body = { email, password, username };
-            // const { data } = await axios.post("http://localhost:3000/register/", body);
+            const body = { email, password, username };
+            const { data } = await axios.post(`${Url}/register`, body);
 
             navigate("/login");
             Toastify({
@@ -33,7 +33,7 @@ export default function Register({ }) {
         } catch (error) {
             console.log(error);
             Toastify({
-                text: error.response.data.message,
+                text: error.message,
                 duration: 3000,
                 newWindow: true,
                 close: true,
