@@ -1,62 +1,67 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useContext } from "react";
 import { themeContext } from "../context/ThemeContext";
+// import authentication from "../../../server/middlewares/authentication";
 import axios from "axios";
-import { useParams } from "react-router-dom";
 
-
-export default function Home({ socket }) {
-  const [messages, setMesssages] = useState([]);
-  const [message_text, setMessage_Text] = useState("");
+export default function Home({ socket,url }) {
+  const [room, setRoom] = useState([]);
+  const [currentRoom, setCurrentRoom] = useState("");
+  const [sendMessage, setSendMessage] = useState("");
+  const [message, setMessage] = useState([]);
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
-  const [chat, setChat] = useState([])
-  const [loading, setLoading] = useState(false)
-  
-  const { roomId } = useParams()
+  function handleRoom(roomName) {
 
-  async function fetchMessage() {
-      try {
-
-        const { data } = await axios.get(`http://localhost:3000/chat/${id}`)
-
-        const dataMessages = data.map((msg) => ({
-          ...msg,
-          User: { username: localStorage.username },
-          createdAt: msg.createdAt
-        }))
-        // console.log(data);
-        setMesssages(dataMessages)
-      } catch (error) {
-        console.log(error);
-      }
+    if (roomName === currentRoom) return;
+    setCurrentRoom(roomName);
+    socket.emit("join:room", roomName);
+    setMessage([]);
   }
+  const rooms = [
+    {
+      id: 1,
+      name: "General Chat",
+    },
+    {
+      id: 2,
+      name: "Project Alpha",
+    },
+    // Add more room objects as needed
+  ];
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function fetchRoom(){
     try {
-      const newMessage = {
-        message_text,
-        roomId,
-        User: { username: localStorage.username }
-      }
-
-      socket.emit("message:new", newMessage);
-
-      setMesssages((prev) => [...prev, newMessage]);
-
-      await axios.post(`http://localhost:3000/chat/${id}`)
+      const {data} = await axios.get(`${url}/rooms`,{
+        headers:{
+          Authorization:`Bearer ${localStorage.access_token}`
+        }
+      }) 
+    console.log(data);
+    setRoom(data)
     } catch (error) {
-      console.log(error); 
+      console.log(error);
+      
     }
   }
+  
 
   useEffect(() => {
-    fetchMessage()
+    // setRoom(rooms);
+    fetchRoom()
+  }, []);
 
-    socket.emit("join-room", { username: localStorage.username })
+  useEffect(() => {
+    console.log(room); // Log when room state updates
+  }, [room]);
 
-    
-
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (sendMessage.trim() === "") return; // Avoid sending empty messages
+    socket.emit("message:new", { room: currentRoom, message: sendMessage });
+  }
+  const isSocketInitialized = useRef(false);
+  useEffect(() => {
+    if (isSocketInitialized.current) return;
     socket.auth = {
       username: localStorage.username,
     };
@@ -69,16 +74,17 @@ export default function Home({ socket }) {
 
     socket.on("message:update", (newMessage) => {
       console.log(newMessage);
-
-      setMesssage((prev) => {
+      setMessage((prev) => {
         return [...prev, newMessage];
       });
     });
+
     return () => {
       socket.off("message:update");
       socket.disconnect();
+      isSocketInitialized.current = false;
     };
-  }, []);
+  }, [socket]);
 
   return (
     <>
@@ -107,51 +113,27 @@ export default function Home({ socket }) {
             <div>
               <ul className="flex flex-col gap-5">
                 {/* grup chat */}
-                <li>
-                  <div className="flex gap-4  border-b-2 pb-2">
-                    {/* avatar */}
-                    <div className="avatar">
-                      <div className="w-14 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                    {/* end avatar */}
-                    <div className="flex text-slate-500 mt-1 flex-col">
-                      <span>Hactiv 8</span>
-                      <p className="text-sm">how it's going on..</p>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div className="flex gap-4   border-b-2 pb-2">
-                    {/* avatar */}
-                    <div className="avatar">
-                      <div className="w-14 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                    {/* end avatar */}
-                    <div className="flex text-slate-500 mt-1 flex-col">
-                      <span>Hactiv 8</span>
-                      <p className="text-sm">how it's going on..</p>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div className="flex gap-4   border-b-2 pb-2">
-                    {/* avatar */}
-                    <div className="avatar">
-                      <div className="w-14 rounded-full">
-                        <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                      </div>
-                    </div>
-                    {/* end avatar */}
-                    <div className="flex text-slate-500 mt-1 flex-col">
-                      <span>Hactiv 8</span>
-                      <p className="text-sm">how it's going on..</p>
-                    </div>
-                  </div>
-                </li>
+                {room.length > 0 &&
+                  room?.map((el) => {
+                    return (
+                      <li key={el.id} onClick={() => handleRoom(el?.name)}>
+                        <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
+                          {/* avatar */}
+                          <div className="avatar">
+                            <div className="w-14 rounded-full">
+                              <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                            </div>
+                          </div>
+                          {/* end avatar */}
+                          <div className="flex text-slate-500 mt-1 flex-col">
+                            <span>{el.name}</span>
+                            <p className="text-sm">how it's going on..</p>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+
                 {/* end group chat */}
               </ul>
             </div>
@@ -190,10 +172,11 @@ export default function Home({ socket }) {
           {/* main content */}
           <div className="flex relative h-screen flex-col ">
             {/* chat container */}
-            <div className="mx-20 mt-20">
+            <div className="mx-20 mt-20 overflow-y-scroll">
               {message.map((msg) => {
                 return (
                   <div
+                    key={msg.id}
                     className={
                       msg.from == localStorage.username
                         ? "chat chat-end"
