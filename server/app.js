@@ -36,6 +36,27 @@ app.post("/chat/:roomId", messageController.createMessage);
 io.on("connection", (socket) => {
   console.log(socket.id);
 
+  socket.on("join:room", (room) => {
+    socket.join(room)
+    console.log(room);
+
+
+  })
+  socket.on("message:new", ({ room, message }) => {
+    if (room && message) {
+      // Emit the new message to all clients in the specified room
+      io.to(room).emit("message:update", {
+        from: socket.handshake.auth.email || 'Anonymous',
+        message
+      });
+      console.log(`Message from ${socket.handshake.auth.email || 'Anonymous'} in room ${room}: ${message}`);
+    } else {
+      console.log("Invalid message data received:", { room, message });
+    }
+  });
+
+
+
   socket.emit("Welcome", "haha");
 
   socket.on("message:new", (message) => {
@@ -50,7 +71,6 @@ io.on("connection", (socket) => {
   if (socket.handshake.auth) {
     console.log("user :" + socket.handshake.auth.username);
   }
-
   return () => {
     socket.off("message:update");
     socket.disconnect();
@@ -62,4 +82,5 @@ io.on("connection", (socket) => {
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
+})
 });
