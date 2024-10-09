@@ -7,39 +7,43 @@ import logo from "../assets/Vector.png"
 export default function Login({ }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
 
     async function handleLogin(e) {
         e.preventDefault();
-        try {
-            // const { data } = await axios.post(`https://h8-phase2-gc.vercel.app/apis/login`, { email, password });
-            // localStorage.setItem("access_token", data.data.access_token);
-            // navigate("/");
+        localStorage.setItem("email", email)
+        navigate("/")
 
-            Toastify({
-                text: "Login success",
-                duration: 3000,
-                newWindow: true,
-                close: true,
-                gravity: "bottom", // `top` or `bottom`
-                position: "right", // `left`, `center` or `right`
-                stopOnFocus: true, // Prevents dismissing of toast on hover
-                style: { background: "#008000" },
-                onClick: function () { }, // Callback after click
-            }).showToast();
-        } catch (error) {
-            Toastify({
-                text: error.response.data.message,
-                duration: 3000,
-                newWindow: true,
-                close: true,
-                gravity: "bottom", // `top` or `bottom`
-                position: "right", // `left`, `center` or `right`
-                stopOnFocus: true, // Prevents dismissing of toast on hover
-                style: { background: "#FF0000" },
-                onClick: function () { }, // Callback after click
-            }).showToast();
-        }
+        // try {
+            
+        //     // const { data } = await axios.post(`https://h8-phase2-gc.vercel.app/apis/login`, { email, password });
+        //     // localStorage.setItem("access_token", data.data.access_token);
+        //     // navigate("/");
+
+        //     Toastify({
+        //         text: "Login success",
+        //         duration: 3000,
+        //         newWindow: true,
+        //         close: true,
+        //         gravity: "bottom", // `top` or `bottom`
+        //         position: "right", // `left`, `center` or `right`
+        //         stopOnFocus: true, // Prevents dismissing of toast on hover
+        //         style: { background: "#008000" },
+        //         onClick: function () { }, // Callback after click
+        //     }).showToast();
+        // } catch (error) {
+        //     Toastify({
+        //         text: error.response.data.message,
+        //         duration: 3000,
+        //         newWindow: true,
+        //         close: true,
+        //         gravity: "bottom", // `top` or `bottom`
+        //         position: "right", // `left`, `center` or `right`
+        //         stopOnFocus: true, // Prevents dismissing of toast on hover
+        //         style: { background: "#FF0000" },
+        //         onClick: function () { }, // Callback after click
+        //     }).showToast();
+        // }
     }
 
     return (
@@ -59,7 +63,7 @@ export default function Login({ }) {
                             </label>
                             <input
                                 className="w-full p-3 rounded bg-white text-gray-700 focus:outline-none"
-                                type="email"
+                                type="text"
                                 id="email"
                                 placeholder="username@gmail.com"
                                 value={email}

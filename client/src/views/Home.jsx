@@ -1,4 +1,48 @@
-export default function Home() {
+import { useEffect, useState } from "react";
+// import message from "../../../server/models/message";
+
+export default function Home({ socket }) {
+  const [sendMessage, setSendMessage] = useState("");
+  const [message, setMesssage] = useState([])
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    socket.emit("message:new", sendMessage);
+  }
+
+  useEffect(() => {
+    
+    socket.auth = {
+      email: localStorage.email
+    }
+
+
+    socket.connect()
+
+    
+
+    socket.on("Welcome", (message) => {
+      console.log(message);
+      
+    })
+
+    socket.on("message:update", (newMessage) => {
+      console.log(newMessage);
+      
+      setMesssage(prev => {
+        return [...prev, newMessage]
+      }) 
+    })
+
+    return () => {
+      socket.off("message:update")
+      socket.disconnect()
+    }
+
+
+
+  },[])
+
   return (
     <>
       <div className="overflow-y-hidden max-h-svh min-h-screen flex bg-base-200 ">
@@ -88,7 +132,11 @@ export default function Home() {
           <div className="flex relative h-screen flex-col ">
             {/* chat container */}
             <div className="mx-20 mt-20">
-              <div className="chat chat-start">
+              {message.map(msg => {
+                return (
+              <div className={msg.from == localStorage.email ? "chat chat-end" : 
+                "chat chat-start" 
+              }>
                 <div className="chat-image avatar">
                   <div className="w-10 rounded-full">
                     <img
@@ -98,49 +146,45 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="chat-header">
-                  Obi-Wan Kenobi
+                  {msg.from == localStorage.email ? "You" : msg.from}
+                  {/* {msg.from} */}
                   <time className="text-xs opacity-50">12:45</time>
                 </div>
-                <div className="chat-bubble">You were the Chosen One!</div>
+                <div className="chat-bubble">{msg.message}</div>
                 <div className="chat-footer opacity-50">Delivered</div>
               </div>
-              <div className="chat chat-end">
-                <div className="chat-image avatar">
-                  <div className="w-10 rounded-full">
-                    <img
-                      alt="Tailwind CSS chat bubble component"
-                      src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                    />
-                  </div>
-                </div>
-                <div className="chat-header">
-                  Anakin
-                  <time className="text-xs opacity-50">12:46</time>
-                </div>
-                <div className="chat-bubble">I hate you!</div>
-                <div className="chat-footer opacity-50">Seen at 12:46</div>
-              </div>
+                  
+                )
+              })}
+              
             </div>
             {/* ch at container end */}
 
             {/* input message */}
+
             <div className=" absolute bottom-16 flex  w-full items-center border-t border-gray-300 p-2">
+              <form onSubmit={handleSubmit} className="">
               <button className="text-gray-500">
                 <span className="text-2xl">😊</span> {/* Emoji button */}
               </button>
-              <input
-                type="text"
-                placeholder="Type message"
-                className="input input-bordered flex-1 mx-2"
-              />
-              <button className="text-gray-500">
-                {/* <Microphone className="w-5 h-5" /> Microphone icon */}
-              </button>
-              <button className="text-gray-500 ml-2">
-                {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
-              </button>
-              <button className="btn w-20 btn-primary ml-2">Send</button>{" "}
-              {/* Send button */}
+                <input
+                  onChange={(e) => setSendMessage(e.target.value)}
+                  type="text"
+                  placeholder="Type message"
+                  className="input input-bordered flex-1 mx-2"
+                />
+                <button className="text-gray-500">
+                  {/* <Microphone className="w-5 h-5" /> Microphone icon */}
+                </button>
+                <button className="text-gray-500 ml-2">
+                  {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
+                </button>
+                <button
+                  className="btn w-20 btn-primary ml-2">
+                  Send
+                </button>{" "}
+                {/* Send button */}
+              </form>
             </div>
             {/* input message  end */}
           </div>
