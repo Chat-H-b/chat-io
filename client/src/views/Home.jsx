@@ -1,6 +1,9 @@
+
 import { useEffect, useRef, useState } from "react";
 import { useContext } from "react";
 import { themeContext } from "../context/ThemeContext";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 
 export default function Home({ socket }) {
   const [room, setRoom] = useState([]);
@@ -33,11 +36,23 @@ export default function Home({ socket }) {
   useEffect(() => {
     console.log(room); // Log when room state updates
   }, [room]);
+export default function Home({ socket, url }) {
+  const [sendMessage, setSendMessage] = useState("");
+  const [message, setMesssage] = useState([]);
+  const [room, setRoom] = useState([]);
+  const [chat, setChat] = useState([]);
+  const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
+  const navigate = useNavigate();
+  function handleLogout() {
+    localStorage.clear();
+    navigate("/login");
+  }
   function handleSubmit(e) {
     e.preventDefault();
     if (sendMessage.trim() === "") return; // Avoid sending empty messages
     socket.emit("message:new", { room: currentRoom, message: sendMessage });
   }
+
   const isSocketInitialized = useRef(false);
   useEffect(() => {
     if (isSocketInitialized.current) return;
@@ -46,6 +61,36 @@ export default function Home({ socket }) {
     };
 
     socket.connect();
+
+  async function fetchChat(roomId) {
+    try {
+      const { data } = await axios.get(`${url}/chat/${roomId}`, {
+        headers: { Authorization: `Bearer ${localStorage.access_token}` },
+      });
+      console.log(data);
+      setChat(data)
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function fetchRoom() {
+    try {
+      const { data } = await axios.get(`${url}/room`, {
+        headers: { Authorization: `Bearer ${localStorage.access_token}` },
+      });
+      console.log(data);
+      setRoom(data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    socket.auth = {
+      username: localStorage.username,
+    };
+    socket.connect();
+    fetchRoom();
 
     socket.on("Welcome", (message) => {
       console.log(message);
@@ -58,12 +103,18 @@ export default function Home({ socket }) {
       });
     });
 
+      setMesssage((prev) => {
+        return [...prev, newMessage];
+      });
+    });
     return () => {
       socket.off("message:update");
       socket.disconnect();
       isSocketInitialized.current = false;
     };
   }, [socket]);
+    };
+  }, []);
 
   return (
     <>
@@ -72,10 +123,18 @@ export default function Home({ socket }) {
         className="overflow-y-hidden max-h-svh min-h-screen flex bg-base-200 ">
         {/* side bar */}
 
-        <div className=" h-screen gap-4 drop-shadow-2xl bg-base-100 w-60 flex flex-col bg-w  z border text-white">
+        <div className=" h-screen gap-4 drop-shadow-2xl bg-base-100 w-60 flex flex-col bg-w  z border ">
           <div className="mx-4 flex  gap-7 flex-col">
             <div>
-              <div className="">
+              <div>
+                <button
+                  onClick={handleLogout}
+                  className="bg-cyan-500 p-4 rounded-lg w-40 font-bold flex justify-center"
+                >
+                  Logout
+                </button>
+              </div>
+              <div>
                 <a className="btn text-blue-400 btn-ghost text-xl">Chat Hub</a>
               </div>
               <div className="flex-none  gap-2">
@@ -112,6 +171,25 @@ export default function Home({ socket }) {
                       </li>
                     );
                   })}
+                {room.map((e) => (
+                  <li>
+                    <button
+                      className="flex gap-4  border-b-2 pb-2"
+                      onClick={() => fetchChat(e.id)}
+                    >
+                      {/* avatar */}
+                      <div className="avatar">
+                        <div className="w-14 rounded-full">
+                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                        </div>
+                      </div>
+                      {/* end avatar */}
+                      <div className="flex text-slate-500 mt-1 flex-col">
+                        <span>{e.name}</span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
 
                 {/* end group chat */}
               </ul>
@@ -161,6 +239,16 @@ export default function Home({ socket }) {
                         ? "chat chat-end"
                         : "chat chat-start"
                     }>
+            <div className="mx-20 mt-20">
+              {message.map((msg) => {
+                return (
+                  <div
+                    className={
+                      msg.from == localStorage.username
+                        ? "chat chat-end"
+                        : "chat chat-start"
+                    }
+                  >
                     <div className="chat-image avatar">
                       <div className="w-10 rounded-full">
                         <img
@@ -170,7 +258,7 @@ export default function Home({ socket }) {
                       </div>
                     </div>
                     <div className="chat-header">
-                      {msg.from == localStorage.email ? "You" : msg.from}
+                      {msg.from == localStorage.username ? "You" : msg.from}
                       {/* {msg.from} */}
                       <time className="text-xs opacity-50">12:45</time>
                     </div>

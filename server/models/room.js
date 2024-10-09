@@ -11,11 +11,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Room.hasMany(models.Message, { foreignKey: 'roomId' })
-      Room.belongsTo(models.User, { foreignKey: 'userId' })
     }
   }
   Room.init({
-    userId: DataTypes.INTEGER,
     name: DataTypes.STRING
   }, {
     sequelize,

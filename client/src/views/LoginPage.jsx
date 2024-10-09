@@ -4,17 +4,50 @@ import Toastify from "toastify-js";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Vector.png";
 
-export default function Login({ Url }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+export default function Login({socket}) {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
   async function handleLogin(e) {
     e.preventDefault();
 
-    try {
-      // const { data } = await axios.post(`${Url}/login`, { email, password });
-      // localStorage.setItem("access_token", data.access_token);
+        try {
+            const { data } = await axios.post(`http://localhost:3000/login`, { email, password });
+
+            console.log(data);
+            
+            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("username", data.payload.username);
+           
+        //    localStorage.setItem("email", email)
+            
+            navigate("/");
+            Toastify({
+                text: "Login success",
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "bottom", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: { background: "#008000" },
+                onClick: function () { }, // Callback after click
+            }).showToast();
+        } catch (error) {
+            console.log(error);
+            Toastify({
+                text: "",
+                duration: 3000,
+                newWindow: true,
+                close: true,
+                gravity: "bottom", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: { background: "#FF0000" },
+                onClick: function () { }, // Callback after click
+            }).showToast();
+        }
 
       localStorage.setItem("email", email);
 
