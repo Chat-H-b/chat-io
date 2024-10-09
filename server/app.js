@@ -39,8 +39,6 @@ io.on("connection", (socket) => {
   socket.on("join:room", (room) => {
     socket.join(room)
     console.log(room);
-
-
   })
   socket.on("message:new", ({ room, message }) => {
     if (room && message) {
@@ -83,4 +81,3 @@ io.on("connection", (socket) => {
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
 })
-});

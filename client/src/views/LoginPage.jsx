@@ -4,77 +4,54 @@ import Toastify from "toastify-js";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Vector.png";
 
-export default function Login({socket}) {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const navigate = useNavigate();
+export default function Login({ socket }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   async function handleLogin(e) {
     e.preventDefault();
+    try {
+      const { data } = await axios.post(`http://localhost:3000/login`, {
+        email,
+        password,
+      });
 
-        try {
-            const { data } = await axios.post(`http://localhost:3000/login`, { email, password });
+      console.log(data);
 
-            console.log(data);
-            
-            localStorage.setItem("access_token", data.access_token);
-            localStorage.setItem("username", data.payload.username);
-           
-        //    localStorage.setItem("email", email)
-            
-            navigate("/");
-            Toastify({
-                text: "Login success",
-                duration: 3000,
-                newWindow: true,
-                close: true,
-                gravity: "bottom", // `top` or `bottom`
-                position: "right", // `left`, `center` or `right`
-                stopOnFocus: true, // Prevents dismissing of toast on hover
-                style: { background: "#008000" },
-                onClick: function () { }, // Callback after click
-            }).showToast();
-        } catch (error) {
-            console.log(error);
-            Toastify({
-                text: "",
-                duration: 3000,
-                newWindow: true,
-                close: true,
-                gravity: "bottom", // `top` or `bottom`
-                position: "right", // `left`, `center` or `right`
-                stopOnFocus: true, // Prevents dismissing of toast on hover
-                style: { background: "#FF0000" },
-                onClick: function () { }, // Callback after click
-            }).showToast();
-        }
+      // Save data to localStorage
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("username", data.payload.username);
 
-      localStorage.setItem("email", email);
-
+      // Navigate to homepage
       navigate("/");
+
+      // Show success toast
       Toastify({
         text: "Login success",
         duration: 3000,
         newWindow: true,
         close: true,
-        gravity: "bottom", // `top` or `bottom`
-        position: "right", // `left`, `center` or `right`
-        stopOnFocus: true, // Prevents dismissing of toast on hover
+        gravity: "bottom",
+        position: "right",
+        stopOnFocus: true,
         style: { background: "#008000" },
-        onClick: function () {}, // Callback after click
+        onClick: function () {},
       }).showToast();
     } catch (error) {
-      console.log(error);
+      console.error(error);
+
+      // Show error toast
       Toastify({
-        text: "",
+        text: "Login failed",
         duration: 3000,
         newWindow: true,
         close: true,
-        gravity: "bottom", // `top` or `bottom`
-        position: "right", // `left`, `center` or `right`
-        stopOnFocus: true, // Prevents dismissing of toast on hover
+        gravity: "bottom",
+        position: "right",
+        stopOnFocus: true,
         style: { background: "#FF0000" },
-        onClick: function () {}, // Callback after click
+        onClick: function () {},
       }).showToast();
     }
   }
@@ -82,7 +59,8 @@ export default function Login({socket}) {
   return (
     <div
       className="flex items-center justify-center h-screen bg-cover"
-      style={{ background: "url('../src/assets/Untitled.png')" }}>
+      style={{ background: "url('../src/assets/Untitled.png')" }}
+    >
       <div className="flex w-3/4 max-w-4xl bg-white rounded-2xl shadow-lg">
         {/* Left section - Login form */}
         <div className="w-1/2 p-10 bg-blue-500 rounded-l-xl">
@@ -95,11 +73,12 @@ export default function Login({socket}) {
               </label>
               <input
                 className="w-full p-3 rounded bg-white text-gray-700 focus:outline-none"
-                type="text"
+                type="email"
                 id="email"
                 placeholder="username@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
 
@@ -114,6 +93,7 @@ export default function Login({socket}) {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
 
