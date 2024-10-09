@@ -4,14 +4,15 @@ import { themeContext } from "../context/ThemeContext";
 // import authentication from "../../../server/middlewares/authentication";
 import axios from "axios";
 
-export default function Home({ socket,url }) {
+export default function Home({ socket, url }) {
   const [room, setRoom] = useState([]);
   const [currentRoom, setCurrentRoom] = useState("");
   const [sendMessage, setSendMessage] = useState("");
   const [message, setMessage] = useState([]);
+  const [roomId, setRoomId] = useState(0);
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
-  function handleRoom(roomName) {
-
+  function handleRoom(roomName, roomId) {
+    setRoomId(roomId);
     if (roomName === currentRoom) return;
     setCurrentRoom(roomName);
     socket.emit("join:room", roomName);
@@ -29,37 +30,94 @@ export default function Home({ socket,url }) {
     // Add more room objects as needed
   ];
 
-  async function fetchRoom(){
+  async function fetchRoom() {
     try {
-      const {data} = await axios.get(`${url}/rooms`,{
-        headers:{
-          Authorization:`Bearer ${localStorage.access_token}`
-        }
-      }) 
-    console.log(data);
-    setRoom(data)
+      const { data } = await axios.get(`${url}/rooms`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.access_token}`,
+        },
+      });
+      console.log(data);
+      setRoom(data);
     } catch (error) {
       console.log(error);
-      
     }
   }
-  
+  async function fetcMessage(roomId) {
+    try {
+      const { data } = await axios.get(`${url}/chat/${roomId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.access_token}`,
+        },
+      });
+      console.log(data);
+      console.log("success");
+
+      setMessage(data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    fetcMessage();
+  }, []);
+
+
 
   useEffect(() => {
     // setRoom(rooms);
-    fetchRoom()
+    fetchRoom();
   }, []);
 
   useEffect(() => {
     console.log(room); // Log when room state updates
-  }, [room]);
+    console.log(roomId); // Log when room state updates
+    console.log(message); // Log when room state updates
+  }, [room, roomId, message]);
 
   function handleSubmit(e) {
     e.preventDefault();
     if (sendMessage.trim() === "") return; // Avoid sending empty messages
     socket.emit("message:new", { room: currentRoom, message: sendMessage });
+    if (roomId  == 0) {
+      console.error("roomId is not set!");
+      return;
+    }
+    async function postMessage(e){
+      e.preventDefault();
+      try {
+        
+        const { data } = await axios.post(`${url}/chat/${roomId}`,{message_text:sendMessage}, {
+          headers: {
+            Authorization: `Bearer ${localStorage.access_token}`,
+          },
+        });
+        console.log("success add nwe message");
+    
+        setMessage(data);
+      } catch (error) {
+        console.log(error);
+        
+      }
+    }
+    postMessage()
+    fetcMessage(roomId)
   }
+
+  function convertTimestampToTime(timestamp) {
+    // Parse timestamp menjadi Date object
+    const date = new Date(timestamp);
+    
+    // Mengambil jam dan menit
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    // Format menjadi 'HH:MM'
+    return `${hours}:${minutes}`;
+  }
+
   const isSocketInitialized = useRef(false);
+
   useEffect(() => {
     if (isSocketInitialized.current) return;
     socket.auth = {
@@ -116,7 +174,9 @@ export default function Home({ socket,url }) {
                 {room.length > 0 &&
                   room?.map((el) => {
                     return (
-                      <li key={el.id} onClick={() => handleRoom(el?.name)}>
+                      <li
+                        key={el.id}
+                        onClick={() => {return handleRoom(el?.name, el.id),fetcMessage(el.id)}}>
                         <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
                           {/* avatar */}
                           <div className="avatar">
@@ -173,12 +233,12 @@ export default function Home({ socket,url }) {
           <div className="flex relative h-screen flex-col ">
             {/* chat container */}
             <div className="mx-20 mt-20 overflow-y-scroll">
-              {message.map((msg) => {
+              {message.length> 0 && message.map((msg) => {
                 return (
                   <div
                     key={msg.id}
                     className={
-                      msg.from == localStorage.username
+                      msg?.User?.username == localStorage.username
                         ? "chat chat-end"
                         : "chat chat-start"
                     }>
@@ -191,11 +251,11 @@ export default function Home({ socket,url }) {
                       </div>
                     </div>
                     <div className="chat-header">
-                      {msg.from == localStorage.username ? "You" : msg.from}
+                      {msg?.User?.username == localStorage.username ? "You" : msg?.User?.username}
                       {/* {msg.from} */}
-                      <time className="text-xs opacity-50">12:45</time>
+                      <time className="text-xs opacity-50">{convertTimestampToTime(msg?.createdAt)}</time>
                     </div>
-                    <div className="chat-bubble">{msg.message}</div>
+                    <div className="chat-bubble">{msg?.message_text}</div>
                     <div className="chat-footer opacity-50">Delivered</div>
                   </div>
                 );
