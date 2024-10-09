@@ -6,11 +6,6 @@ const path = require("path");
 
 
 //import controller
-const userController = require("./controllers/userController")
-const roomController = require("./controllers/roomController")
-const messageController = require("./controllers/messageController");
-const message = require('./models/message');
-
 
 const app = express()
 const port = 3000
@@ -27,29 +22,36 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 //api route
-app.post("/register", userController.register)
-app.post("/login", userController.login)
+
 
 io.on("connection", (socket) => {
   console.log(socket.id);
 
+  socket.on("join:room", (room) => {
+    socket.join(room)
+    console.log(room);
 
-  socket.emit("Welcome","haha") 
-  
-  socket.on("message:new", (message) => {
-    console.log(message);
-    
-    io.emit("message:update", {
-      from: socket.handshake.auth.email,      
-      message
-    })
+
   })
-  
+  socket.on("message:new", ({ room, message }) => {
+    if (room && message) {
+      // Emit the new message to all clients in the specified room
+      io.to(room).emit("message:update", {
+        from: socket.handshake.auth.email || 'Anonymous',
+        message
+      });
+      console.log(`Message from ${socket.handshake.auth.email || 'Anonymous'} in room ${room}: ${message}`);
+    } else {
+      console.log("Invalid message data received:", { room, message });
+    }
+  });
+
+
+
+
   if (socket.handshake.auth) {
     console.log("email :" + socket.handshake.auth.email);
   }
-
-
   return () => {
     socket.off("message:update")
     socket.disconnect()
@@ -60,5 +62,5 @@ io.on("connection", (socket) => {
 // socket.on("message:new")
 
 server.listen(port, () => {
-    console.log(`http://localhost:${port}`);
+  console.log(`http://localhost:${port}`);
 })
