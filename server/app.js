@@ -32,8 +32,31 @@ app.use(authentication);
 app.get("/chat/:roomId", messageController.readMessage);
 app.post("/chat/:roomId", messageController.createMessage);
 
+const usernameSocket = new Map()
+const socketUser = new Map()
+
 io.on("connection", (socket) => {
   console.log(socket.id);
+
+
+  socket.on("join-room", (data) => {
+    const { roomId, username } = data;
+
+    console.log("User", username, "joined room", roomId);
+
+    usernameSocket.set(username, socket.id);
+    socketUser.set(socket.id, username)
+
+    socket.join(roomId)
+
+    socket.broadcast.to(roomId).emit("user-joined", {username})
+  })
+
+  socket.on("offer", (data) => {
+    socket.broadcast.emit("offer", data)
+  })
+
+  // socket.on()
 
   socket.emit("Welcome", "haha");
 

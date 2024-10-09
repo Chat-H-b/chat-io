@@ -1,18 +1,62 @@
 import { useEffect, useState } from "react";
 import { useContext } from "react";
 import { themeContext } from "../context/ThemeContext";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+
 
 export default function Home({ socket }) {
-  const [sendMessage, setSendMessage] = useState("");
-  const [message, setMesssage] = useState([]);
+  const [messages, setMesssages] = useState([]);
+  const [message_text, setMessage_Text] = useState("");
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
+  const [chat, setChat] = useState([])
+  const [loading, setLoading] = useState(false)
+  
+  const { roomId } = useParams()
 
-  function handleSubmit(e) {
+  async function fetchMessage() {
+      try {
+
+        const { data } = await axios.get(`http://localhost:3000/chat/${id}`)
+
+        const dataMessages = data.map((msg) => ({
+          ...msg,
+          User: { username: localStorage.username },
+          createdAt: msg.createdAt
+        }))
+        // console.log(data);
+        setMesssages(dataMessages)
+      } catch (error) {
+        console.log(error);
+      }
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    socket.emit("message:new", sendMessage);
+    try {
+      const newMessage = {
+        message_text,
+        roomId,
+        User: { username: localStorage.username }
+      }
+
+      socket.emit("message:new", newMessage);
+
+      setMesssages((prev) => [...prev, newMessage]);
+
+      await axios.post(`http://localhost:3000/chat/${id}`)
+    } catch (error) {
+      console.log(error); 
+    }
   }
 
   useEffect(() => {
+    fetchMessage()
+
+    socket.emit("join-room", { username: localStorage.username })
+
+    
+
     socket.auth = {
       username: localStorage.username,
     };
