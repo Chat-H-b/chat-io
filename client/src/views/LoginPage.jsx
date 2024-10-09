@@ -15,9 +15,9 @@ export default function Login({ Url }) {
         try {
             const { data } = await axios.post(`${Url}/login`, { email, password });
             localStorage.setItem("access_token", data.access_token);
-           
-           //localStorage.setItem("email", email)
-            
+
+            //localStorage.setItem("email", email)
+
             navigate("/");
             Toastify({
                 text: "Login success",
@@ -45,7 +45,7 @@ export default function Login({ Url }) {
             }).showToast();
         }
 
-     
+
     }
 
     return (
