@@ -1,4 +1,9 @@
 export default function Home() {
+
+  function logout() {
+    localStorage.clear();
+    navigate("/login");
+  }
   return (
     <>
       <div className="overflow-y-hidden max-h-svh min-h-screen flex bg-base-200 ">
