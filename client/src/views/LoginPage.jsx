@@ -11,11 +11,14 @@ export default function Login({ Url }) {
 
     async function handleLogin(e) {
         e.preventDefault();
+
         try {
             const { data } = await axios.post(`${Url}/login`, { email, password });
             localStorage.setItem("access_token", data.access_token);
+           
+           //localStorage.setItem("email", email)
+            
             navigate("/");
-
             Toastify({
                 text: "Login success",
                 duration: 3000,
@@ -41,6 +44,8 @@ export default function Login({ Url }) {
                 onClick: function () { }, // Callback after click
             }).showToast();
         }
+
+     
     }
 
     return (
@@ -60,7 +65,7 @@ export default function Login({ Url }) {
                             </label>
                             <input
                                 className="w-full p-3 rounded bg-white text-gray-700 focus:outline-none"
-                                type="email"
+                                type="text"
                                 id="email"
                                 placeholder="username@gmail.com"
                                 value={email}
