@@ -10,6 +10,7 @@ class roomController {
 
         }
     }
+
     static async readRoomDetail(req, res, next) {
         const {id} = req.params
         try {
@@ -20,5 +21,3 @@ class roomController {
 
         }
     }
-}
-module.exports = roomController

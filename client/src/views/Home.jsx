@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { useContext } from "react";
 import { themeContext } from "../context/ThemeContext";
@@ -148,10 +149,42 @@ async function fetchRoomName(roomId){
   }, [message,roomName]);
   useEffect(() => {
     // if (isSocketInitialized.current) return;
+
+
+    socket.auth = {
+      email: localStorage.email,
+    };
+
+    socket.connect();
+    fetchRoom();
+
+  async function fetchChat(roomId) {
+    try {
+      const { data } = await axios.get(`${url}/chat/${roomId}`, {
+        headers: { Authorization: `Bearer ${localStorage.access_token}` },
+      });
+      console.log(data);
+      setChat(data)
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function fetchRoom() {
+    try {
+      const { data } = await axios.get(`${url}/room`, {
+        headers: { Authorization: `Bearer ${localStorage.access_token}` },
+      });
+      console.log(data);
+      setRoom(data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
     socket.auth = {
       username: localStorage.username,
     };
-
     socket.connect();
     fetchRoom();
 
@@ -162,7 +195,10 @@ async function fetchRoomName(roomId){
     socket.on("message:update", (newMessage) => {
       console.log(newMessage);
       setMessage((prev) => {
+
         return [...prev, newMessage, fetcMessage(roomId)];
+
+     
       });
       setMessage("");
     });
@@ -170,7 +206,9 @@ async function fetchRoomName(roomId){
     return () => {
       socket.off("message:update");
       socket.disconnect();
+
       // isSocketInitialized.current = false;
+
     };
   }, [roomId]);
   return (
@@ -180,10 +218,20 @@ async function fetchRoomName(roomId){
         className="h-screen    flex  overflow-hidden ">
         {/* side bar */}
 
+
         <div className=" h-screen mt-48 overflow-y-hidden gap-4 drop-shadow-2xl bg-base-100 w-60 flex flex-col bg-w  z border text-white">
+
           <div className="mx-4 flex  gap-7 flex-col">
             <div>
-              <div className="">
+              <div>
+                <button
+                  onClick={handleLogout}
+                  className="bg-cyan-500 p-4 rounded-lg w-40 font-bold flex justify-center"
+                >
+                  Logout
+                </button>
+              </div>
+              <div>
                 <a className="btn text-blue-400 btn-ghost text-xl">Chat Hub</a>
               </div>
               <div className="flex-none  gap-2">
@@ -203,11 +251,13 @@ async function fetchRoomName(roomId){
                 {room.length > 0 &&
                   room?.map((el) => {
                     return (
+
                       <li
                         key={el.id}
                         onClick={() => {
                           return fetcMessage(el.id), setRoomId(el.id),fetchRoomName(el.id);
                         }}>
+
                         <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
                           {/* avatar */}
                           <div className="avatar">
@@ -224,6 +274,27 @@ async function fetchRoomName(roomId){
                       </li>
                     );
                   })}
+
+                {room.map((e) => (
+                  <li>
+                    <button
+                      className="flex gap-4  border-b-2 pb-2"
+                      onClick={() => fetchChat(e.id)}
+                    >
+                      {/* avatar */}
+                      <div className="avatar">
+                        <div className="w-14 rounded-full">
+                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                        </div>
+                      </div>
+                      {/* end avatar */}
+                      <div className="flex text-slate-500 mt-1 flex-col">
+                        <span>{e.name}</span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+
 
                 {/* end group chat */}
               </ul>
@@ -263,6 +334,7 @@ async function fetchRoomName(roomId){
           {/* main content */}
           <div className="flex  h-screen flex-col ">
             {/* chat container */}
+
             <div className="mx-20 mt-72 h-[67rem] overflow-y-scroll">
               {message.length > 0 &&
                 message.map((msg) => {
@@ -281,6 +353,34 @@ async function fetchRoomName(roomId){
                             src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
                           />
                         </div>
+
+            <div className="mx-20 mt-20 overflow-y-scroll">
+              {message.map((msg) => {
+                return (
+                  <div
+                    key={msg.id}
+                    className={
+                      msg.from == localStorage.email
+                        ? "chat chat-end"
+                        : "chat chat-start"
+                    }>
+            <div className="mx-20 mt-20">
+              {message.map((msg) => {
+                return (
+                  <div
+                    className={
+                      msg.from == localStorage.username
+                        ? "chat chat-end"
+                        : "chat chat-start"
+                    }
+                  >
+                    <div className="chat-image avatar">
+                      <div className="w-10 rounded-full">
+                        <img
+                          alt="Tailwind CSS chat bubble component"
+                          src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                        />
+
                       </div>
                       <div className="chat-header">
                         {msg?.User?.username == localStorage.username

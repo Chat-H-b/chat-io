@@ -5,6 +5,8 @@ const cors = require("cors")
 const path = require("path");
 
 
+
+
 //import controller
 const userController = require("./controllers/userController");
 const roomController = require("./controllers/roomController");
@@ -31,8 +33,10 @@ app.use(express.urlencoded({ extended: false }))
 app.post("/register", userController.register);
 app.post("/login", userController.login);
 app.use(authentication);
+
 app.get("/rooms",roomController.readRoom)
 app.get("/rooms/:id",roomController.readRoomDetail)
+
 app.get("/chat/:roomId", messageController.readMessage);
 app.post("/chat/:roomId", messageController.createMessage);
 io.on("connection", (socket) => {
@@ -40,9 +44,15 @@ io.on("connection", (socket) => {
 socket.emit("welcome","haalo")
 
 
+
   socket.on("join:room", (roomId) => {
     socket.join(roomId)
     console.log(roomId);
+
+
+
+
+  
 
 
   })
@@ -73,4 +83,6 @@ socket.emit("welcome","haalo")
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
+
 })
+
