@@ -1,18 +1,44 @@
 import { useEffect, useRef, useState } from "react";
 import { useContext } from "react";
 import { themeContext } from "../context/ThemeContext";
-// import authentication from "../../../server/middlewares/authentication";
 import axios from "axios";
+import EmojiPicker from 'emoji-picker-react';
 
 export default function Home({ socket, url }) {
   const [room, setRoom] = useState([]);
   const[roomName,setRoomName] =useState('')
-  const [currentRoom, setCurrentRoom] = useState("");
   const [sendMessage, setSendMessage] = useState("");
   const [message, setMessage] = useState([]);
   const [roomId, setRoomId] = useState(0);
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
-  const bottomRef = useRef();
+  // const bottomRef = useRef();
+  const messageEndRef = useRef(null);
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const handleEmojiClick = (emojiObject) => {
+    setSendMessage((prevMessage) => prevMessage + emojiObject.emoji); // Add emoji to the input field
+  };
+
+  const scrollToBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const stringToColor = (string) => {
+    let hash = 0;
+    for (let i = 0; i < string.length; i++) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+      const value = (hash >> (i * 8)) & 0xff;
+      color += ('00' + value.toString(16)).substr(-2);
+    }
+    return color;
+  };
+
+
+
   // function handleRoom(roomName, roomId) {
   //   setRoomId(roomId);
   //   if (roomName === currentRoom) return;
@@ -137,15 +163,19 @@ async function fetchRoomName(roomId){
     // Format menjadi 'HH:MM'
     return `${hours}:${minutes}`;
   }
+  
+  
+
+  
 
   // const isSocketInitialized = useRef(false);
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-      console.log(roomName);
-      
-    }
-  }, [message,roomName]);
+    // if (bottomRef.current) {
+    //   bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    // }
+    scrollToBottom();
+  }, [message, roomName]);
+
   useEffect(() => {
     // if (isSocketInitialized.current) return;
     socket.auth = {
@@ -161,10 +191,10 @@ async function fetchRoomName(roomId){
 
     socket.on("message:update", (newMessage) => {
       console.log(newMessage);
-      setMessage((prev) => {
+      setSendMessage((prev) => {
         return [...prev, newMessage, fetcMessage(roomId)];
       });
-      setMessage("");
+      setSendMessage("");
     });
 
     return () => {
@@ -199,33 +229,38 @@ async function fetchRoomName(roomId){
             {/* chat section */}
             <div>
               <ul className="flex flex-col gap-5">
-                {/* grup chat */}
-                {room.length > 0 &&
-                  room?.map((el) => {
-                    return (
-                      <li
-                        key={el.id}
-                        onClick={() => {
-                          return fetcMessage(el.id), setRoomId(el.id),fetchRoomName(el.id);
-                        }}>
-                        <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
-                          {/* avatar */}
-                          <div className="avatar">
-                            <div className="w-14 rounded-full">
-                              <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                            </div>
-                          </div>
-                          {/* end avatar */}
-                          <div className="flex text-slate-500 mt-1 flex-col">
-                            <span>{el.name}</span>
-                            <p className="text-sm">how it's going on..</p>
+              {/* grup chat */}
+              {room.length > 0 &&
+                room?.map((el) => {
+                  return (
+                    <li
+                      key={el.id}
+                      onClick={() => {
+                        return fetcMessage(el.id), setRoomId(el.id), fetchRoomName(el.id);
+                      }}>
+                      <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
+                        {/* avatar */}
+                        <div className="avatar">
+                          <div className="w-14 h-14 rounded-full overflow-hidden">
+                            <img 
+                              src={el?.imageUrl || `https://picsum.photos/150?random=${el.id}`} // Gambar acak dari Lorem Picsum jika imageUrl kosong
+                              // src="https://www.michaelpage.co.id/sites/michaelpage.co.id/files/2022-05/Software%20Developer.jpg"
+                              alt={`${el.name}'s avatar`} // Teks alt untuk aksesibilitas
+                              className="object-cover w-full h-full" // Mengatur gambar agar sesuai dengan ukuran kontainer
+                            />
                           </div>
                         </div>
-                      </li>
-                    );
-                  })}
+                        {/* end avatar */}
+                        <div className="flex text-slate-500 mt-1 flex-col">
+                          <span>{el.name}</span>
+                          <p className="text-sm">how it's going on..</p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
 
-                {/* end group chat */}
+              {/* end group chat */}
               </ul>
             </div>
           </div>
@@ -264,66 +299,95 @@ async function fetchRoomName(roomId){
           <div className="flex  h-screen flex-col ">
             {/* chat container */}
             <div className="mx-20 mt-72 h-[67rem] overflow-y-scroll">
-              {message.length > 0 &&
-                message.map((msg) => {
-                  return (
-                    <div
-                      key={msg.id}
-                      className={
-                        msg?.User?.username == localStorage.username
-                          ? "chat chat-end"
-                          : "chat chat-start"
-                      }>
-                      <div className="chat-image avatar">
-                        <div className="w-10 rounded-full">
+            {message.length > 0 &&
+              message.map((msg) => {
+                const avatarUrl = msg?.User?.imageUrl; // Use imageUrl if available
+                const username = msg?.User?.username || "Unknown User"; // Fallback if username is not available
+                const randomColor = stringToColor(username); // Generate a color based on username
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={
+                      msg?.User?.username === localStorage.username
+                        ? "chat chat-end"
+                        : "chat chat-start"
+                    }>
+                    <div className="chat-image avatar">
+                      <div
+                        className="w-10 rounded-full flex items-center justify-center"
+                        style={{
+                          backgroundColor: avatarUrl ? 'transparent' : randomColor, // Use random color if no avatar
+                        }}>
+                        {avatarUrl ? (
                           <img
-                            alt="Tailwind CSS chat bubble component"
-                            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                            alt={`${msg?.User?.username}'s avatar`}
+                            src={avatarUrl} // Use the avatar image if available
+                            className="object-cover w-full h-full rounded-full"
                           />
-                        </div>
+                        ) : (
+                          <span className="text-white font-bold">
+                            {username.charAt(0).toUpperCase()} {/* Display first initial */}
+                          </span>
+                        )}
                       </div>
-                      <div className="chat-header">
-                        {msg?.User?.username == localStorage.username
-                          ? "You"
-                          : msg?.User?.username}
-                        {/* {msg.from} */}
-                      </div>
-                      <div className="chat-bubble">{msg?.message_text}</div>
-                      <div className="chat-footer opacity-50">Delivered</div>
-                      <time className="text-xs opacity-50">
-                        {convertTimestampToTime(msg?.createdAt)}
-                      </time>
                     </div>
-                  );
-                })}
-            </div>
+                    <div className="chat-header">
+                      {msg?.User?.username === localStorage.username ? "You" : msg?.User?.username}
+                    </div>
+                    <div className="chat-bubble">{msg?.message_text}</div>
+                    <div className="chat-footer opacity-50">Delivered</div>
+                    <time className="text-xs opacity-50">
+                      {convertTimestampToTime(msg?.createdAt)}
+                    </time>
+                  </div>
+                );
+              })}
+            {/* Elemen ini digunakan untuk scroll ke bawah */}
+            <div ref={messageEndRef}></div>
+          </div>
+
             {/* ch at container end */}
-            <div ref={bottomRef} />
+            <div/>
             {/* input message */}
 
-            <div className=" absolute -bottom-40 flex w-full  items-center border-t border-gray-300 p-2">
-              <div className="flex w-full ">
-                <form onSubmit={handleSubmit} className="flex w-full">
-                  <button className="text-gray-500">
-                    <span className="text-2xl">😊</span> {/* Emoji button */}
-                  </button>
-                  <input
-                    onChange={(e) => setSendMessage(e.target.value)}
-                    type="text"
-                    placeholder="Type message"
-                    className="input input-bordered flex-1 w-full mx-2"
-                  />
-                  <button className="text-gray-500">
-                    {/* <Microphone className="w-5 h-5" /> Microphone icon */}
-                  </button>
-                  <button className="text-gray-500 ml-2">
-                    {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
-                  </button>
-                  <button className="btn w-20 btn-primary ml-2">Send</button>{" "}
-                  {/* Send button */}
-                </form>
-              </div>
+            <div className="absolute -bottom-40 flex w-full items-center border-t border-gray-300 p-2">
+            <div className="flex w-full ">
+              <form onSubmit={handleSubmit} className="flex w-full">
+                <button
+                  type="button"
+                  className="text-gray-500"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <span className="text-2xl">😊</span> {/* Emoji button */}
+                </button>
+
+                {showEmojiPicker && (
+                  <div className="absolute bottom-16 left-0">
+                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                  </div>
+                )}
+
+                <input
+                  value={sendMessage}
+                  onChange={(e) => setSendMessage(e.target.value)}
+                  type="text"
+                  placeholder="Type message"
+                  className="input input-bordered flex-1 w-full mx-2"
+                />
+
+                <button className="text-gray-500" type="button">
+                  {/* <Microphone className="w-5 h-5" /> Microphone icon */}
+                </button>
+                <button className="text-gray-500 ml-2" type="button">
+                  {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
+                </button>
+                <button className="btn w-20 btn-primary ml-2" type="submit">
+                  Send
+                </button>{" "}
+              </form>
             </div>
+          </div>
             {/* input message  end */}
           </div>
         </div>

@@ -1,4 +1,7 @@
 'use strict';
+
+
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -12,6 +15,10 @@ module.exports = {
       name: {
         type: Sequelize.STRING,
         allowNull: false,
+      },
+      imageUrl:{
+        type:Sequelize.STRING,
+        allowNull:false
       },
       createdAt: {
         allowNull: false,
