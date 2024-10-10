@@ -168,11 +168,13 @@ export default function Home({ socket, url }) {
 
   // const isSocketInitialized = useRef(false);
   useEffect(() => {
+
+    fetchChat(roomId)
     // if (bottomRef.current) {
     //   bottomRef.current.scrollIntoView({ behavior: "smooth" });
     // }
     scrollToBottom();
-  }, [message, roomName]);
+  }, [message,roomId,]);
 
   useEffect(() => {
     // if (isSocketInitialized.current) return;
@@ -182,7 +184,7 @@ export default function Home({ socket, url }) {
     };
 
     socket.connect();
-    fetchRoom();
+    fetchRoom(roomId);
   }, []);
 
   async function fetchChat(roomId) {
@@ -225,6 +227,7 @@ export default function Home({ socket, url }) {
         return [...prev, newMessage, fetcMessage(roomId)];
       });
       setSendMessage("");
+      fetchChat()
     });
 
     return () => {
@@ -292,7 +295,7 @@ export default function Home({ socket, url }) {
                               <img
                                 src={
                                   el?.imageUrl ||
-                                  `https://picsum.photos/150?random=${el.id}`
+                                  `https://picsum.photos/150?om=${el.id}`
                                 } // Gambar acak dari Lorem Picsum jika imageUrl kosong
                                 // src="https://www.michaelpage.co.id/sites/michaelpage.co.id/files/2022-05/Software%20Developer.jpg"
                                 alt={`${el.name}'s avatar`} // Teks alt untuk aksesibilitas
