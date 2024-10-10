@@ -163,7 +163,7 @@ export default function Login({socket}) {
             <h1 className="text-blue-500 text-3xl font-bold">ChatHub</h1>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
+
+    );
+};
+

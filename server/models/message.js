@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
   Message.init({
     roomId: DataTypes.INTEGER,
     userId: DataTypes.INTEGER,
-    message_text: DataTypes.TEXT
+    message_text: DataTypes.TEXT,
   }, {
     sequelize,
     modelName: 'Message',
