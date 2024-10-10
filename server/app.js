@@ -32,7 +32,9 @@ app.post("/register", userController.register);
 app.post("/login", userController.login);
 app.use(authentication);
 app.get("/rooms",roomController.readRoom)
+app.post("/rooms",roomController.addRoom)
 app.get("/rooms/:id",roomController.readRoomDetail)
+
 app.get("/chat/:roomId", messageController.readMessage);
 app.post("/chat/:roomId", messageController.createMessage);
 io.on("connection", (socket) => {

@@ -20,5 +20,17 @@ class roomController {
 
         }
     }
+
+    static async addRoom(req, res, next) {
+        const { name, imageUrl } = req.body
+        try {
+            const room = await Room.create({name, imageUrl})
+
+            res.status(201).json(room)
+        } catch (error) {
+            console.log(error);
+            
+        }
+    }
 }
 module.exports = roomController
