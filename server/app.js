@@ -31,33 +31,33 @@ app.use(express.urlencoded({ extended: false }))
 app.post("/register", userController.register);
 app.post("/login", userController.login);
 app.use(authentication);
+app.get("/rooms",roomController.readRoom)
+app.get("/rooms/:id",roomController.readRoomDetail)
 app.get("/chat/:roomId", messageController.readMessage);
 app.post("/chat/:roomId", messageController.createMessage);
-app.get("/rooms",roomController.readRoom)
 io.on("connection", (socket) => {
   console.log(socket.id);
 socket.emit("welcome","haalo")
-  socket.on("join:room", (room) => {
-    socket.join(room)
-    console.log(room);
+
+
+  socket.on("join:room", (roomId) => {
+    socket.join(roomId)
+    console.log(roomId);
 
 
   })
-  socket.on("message:new", ({ room, message }) => {
-    if (room && message) {
-      // Emit the new message to all clients in the specified room
-      io.to(room).emit("message:update", {
+  socket.on("message:new", ({ roomId, message }) => {
+    if (roomId ||  message) {
+      // Emit the new message to all clients in the specified roomId
+      io.to(roomId).emit("message:update", {
         from: socket.handshake.auth.username || 'Anonymous',
         message
       });
-      console.log(`Message from ${socket.handshake.auth.username || 'Anonymous'} in room ${room}: ${message}`);
+      console.log(`Message from ${socket.handshake.auth.username || 'Anonymous'} in roomId ${roomId}: ${message}`);
     } else {
-      console.log("Invalid message data received:", { room, message });
+      console.log("Invalid message data received:", { roomId, message });
     }
   });
-
-
-
 
   if (socket.handshake.auth) {
     console.log("username :" + socket.handshake.auth.username);

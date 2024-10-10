@@ -10,5 +10,15 @@ class roomController {
 
         }
     }
+    static async readRoomDetail(req, res, next) {
+        const {id} = req.params
+        try {
+            const room = await Room.findByPk(id)
+            res.status(200).json(room.name)
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
 }
 module.exports = roomController

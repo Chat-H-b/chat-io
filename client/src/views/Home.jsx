@@ -6,29 +6,31 @@ import axios from "axios";
 
 export default function Home({ socket, url }) {
   const [room, setRoom] = useState([]);
+  const[roomName,setRoomName] =useState('')
   const [currentRoom, setCurrentRoom] = useState("");
   const [sendMessage, setSendMessage] = useState("");
   const [message, setMessage] = useState([]);
   const [roomId, setRoomId] = useState(0);
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
-  function handleRoom(roomName, roomId) {
-    setRoomId(roomId);
-    if (roomName === currentRoom) return;
-    setCurrentRoom(roomName);
-    socket.emit("join:room", roomName);
-    setMessage([]);
-  }
-  const rooms = [
-    {
-      id: 1,
-      name: "General Chat",
-    },
-    {
-      id: 2,
-      name: "Project Alpha",
-    },
-    // Add more room objects as needed
-  ];
+  const bottomRef = useRef();
+  // function handleRoom(roomName, roomId) {
+  //   setRoomId(roomId);
+  //   if (roomName === currentRoom) return;
+  //   setCurrentRoom(roomName);
+  //   socket.emit("join:room", roomName);
+  //   setMessage([]);
+  // }
+  // const rooms = [
+  //   {
+  //     id: 1,
+  //     name: "General Chat",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Project Alpha",
+  //   },
+  //   // Add more room objects as needed
+  // ];
 
   async function fetchRoom() {
     try {
@@ -43,6 +45,7 @@ export default function Home({ socket, url }) {
       console.log(error);
     }
   }
+
   async function fetcMessage(roomId) {
     try {
       const { data } = await axios.get(`${url}/chat/${roomId}`, {
@@ -54,77 +57,103 @@ export default function Home({ socket, url }) {
       console.log("success");
 
       setMessage(data);
+      setSendMessage("");
+      
+      
+      // setRoomName(data?.Room.name)
+      socket.emit("join:room", roomId);
     } catch (error) {
       console.log(error);
     }
   }
-  useEffect(() => {
-    fetcMessage();
-  }, []);
+async function fetchRoomName(roomId){
+  try {
+  const{data} =await axios.get(`${url}/rooms/${roomId}`,{
+    headers:{
+      Authorization:`Bearer ${localStorage.access_token}`
+    }
+  })
+  setRoomName(data)
+  } catch (error) {
+    console.log(error);
+    
+  }
+}
+  // useEffect(() => {
+  //   fetcMessage();
+  // }, []);
 
+  // useEffect(() => {
+  //   // setRoom(rooms);
+  //   fetchRoom();
+  // }, []);
 
+  // useEffect(() => {
+  //   console.log(room); // Log when room state updates
+  //   console.log(roomId); // Log when room state updates
+  //   console.log(message); // Log when room state updates
+  // }, [room, roomId, message]);
 
-  useEffect(() => {
-    // setRoom(rooms);
-    fetchRoom();
-  }, []);
-
-  useEffect(() => {
-    console.log(room); // Log when room state updates
-    console.log(roomId); // Log when room state updates
-    console.log(message); // Log when room state updates
-  }, [room, roomId, message]);
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+
     if (sendMessage.trim() === "") return; // Avoid sending empty messages
-    socket.emit("message:new", { room: currentRoom, message: sendMessage });
-    if (roomId  == 0) {
+
+    socket.emit("message:new", { roomId, message: sendMessage });
+
+    if (roomId == 0) {
       console.error("roomId is not set!");
       return;
     }
-    async function postMessage(e){
-      e.preventDefault();
-      try {
-        
-        const { data } = await axios.post(`${url}/chat/${roomId}`,{message_text:sendMessage}, {
+
+    try {
+      const { data } = await axios.post(
+        `${url}/chat/${roomId}`,
+        { message_text: sendMessage },
+        {
           headers: {
             Authorization: `Bearer ${localStorage.access_token}`,
           },
-        });
-        console.log("success add nwe message");
-    
-        setMessage(data);
-      } catch (error) {
-        console.log(error);
-        
-      }
+        }
+      );
+      console.log("success add nwe message");
+
+      // setMessage(data);
+      fetcMessage(roomId);
+      setSendMessage("");
+    } catch (error) {
+      console.log(error);
     }
-    postMessage()
-    fetcMessage(roomId)
   }
 
   function convertTimestampToTime(timestamp) {
     // Parse timestamp menjadi Date object
     const date = new Date(timestamp);
-    
+
     // Mengambil jam dan menit
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
     // Format menjadi 'HH:MM'
     return `${hours}:${minutes}`;
   }
 
-  const isSocketInitialized = useRef(false);
-
+  // const isSocketInitialized = useRef(false);
   useEffect(() => {
-    if (isSocketInitialized.current) return;
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+      console.log(roomName);
+      
+    }
+  }, [message,roomName]);
+  useEffect(() => {
+    // if (isSocketInitialized.current) return;
     socket.auth = {
       username: localStorage.username,
     };
 
     socket.connect();
+    fetchRoom();
 
     socket.on("Welcome", (message) => {
       console.log(message);
@@ -133,25 +162,25 @@ export default function Home({ socket, url }) {
     socket.on("message:update", (newMessage) => {
       console.log(newMessage);
       setMessage((prev) => {
-        return [...prev, newMessage];
+        return [...prev, newMessage, fetcMessage(roomId)];
       });
+      setMessage("");
     });
 
     return () => {
       socket.off("message:update");
       socket.disconnect();
-      isSocketInitialized.current = false;
+      // isSocketInitialized.current = false;
     };
-  }, [socket]);
-
+  }, [roomId]);
   return (
     <>
       <div
         data-theme={theme[currentTheme].dataTheme}
-        className="overflow-y-hidden max-h-svh min-h-screen flex bg-base-200 ">
+        className="h-screen    flex  overflow-hidden ">
         {/* side bar */}
 
-        <div className=" h-screen gap-4 drop-shadow-2xl bg-base-100 w-60 flex flex-col bg-w  z border text-white">
+        <div className=" h-screen mt-48 overflow-y-hidden gap-4 drop-shadow-2xl bg-base-100 w-60 flex flex-col bg-w  z border text-white">
           <div className="mx-4 flex  gap-7 flex-col">
             <div>
               <div className="">
@@ -176,7 +205,9 @@ export default function Home({ socket, url }) {
                     return (
                       <li
                         key={el.id}
-                        onClick={() => {return handleRoom(el?.name, el.id),fetcMessage(el.id)}}>
+                        onClick={() => {
+                          return fetcMessage(el.id), setRoomId(el.id),fetchRoomName(el.id);
+                        }}>
                         <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
                           {/* avatar */}
                           <div className="avatar">
@@ -201,12 +232,11 @@ export default function Home({ socket, url }) {
         </div>
         {/* side bar end */}
         {/* top bar */}
-        <div className="w-full">
-          <div className="drop-shadow-2xl  h-11 navbar flex text-center  bg-base-100">
-            <div className="flex justify-evenly w-full text-center">
-              <h1 className="font-bold  text-black">Programming</h1>
-            </div>
-            <div>
+        <div className="w-full flex relative flex-col h-screen  ">
+          <div className="drop-shadow-2xl absolute top-48 z-30 pb-9 h-11 navbar flex text-center   bg-base-100">
+            <div className="flex w-full text-center">
+              <h1 className="font-bold mt-5 ml-6 text-black">{roomName ? roomName:'global'}</h1>
+            <div className="flex justify-end mt-4 w-[80%]">
               {currentTheme == "light" ? (
                 <svg
                   className="swap-on h-10 w-10 fill-current"
@@ -225,66 +255,74 @@ export default function Home({ socket, url }) {
                 </svg>
               )}
             </div>
+            </div>
           </div>
 
           {/* end top bar */}
 
           {/* main content */}
-          <div className="flex relative h-screen flex-col ">
+          <div className="flex  h-screen flex-col ">
             {/* chat container */}
-            <div className="mx-20 mt-20 overflow-y-scroll">
-              {message.length> 0 && message.map((msg) => {
-                return (
-                  <div
-                    key={msg.id}
-                    className={
-                      msg?.User?.username == localStorage.username
-                        ? "chat chat-end"
-                        : "chat chat-start"
-                    }>
-                    <div className="chat-image avatar">
-                      <div className="w-10 rounded-full">
-                        <img
-                          alt="Tailwind CSS chat bubble component"
-                          src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                        />
+            <div className="mx-20 mt-72 h-[67rem] overflow-y-scroll">
+              {message.length > 0 &&
+                message.map((msg) => {
+                  return (
+                    <div
+                      key={msg.id}
+                      className={
+                        msg?.User?.username == localStorage.username
+                          ? "chat chat-end"
+                          : "chat chat-start"
+                      }>
+                      <div className="chat-image avatar">
+                        <div className="w-10 rounded-full">
+                          <img
+                            alt="Tailwind CSS chat bubble component"
+                            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                          />
+                        </div>
                       </div>
+                      <div className="chat-header">
+                        {msg?.User?.username == localStorage.username
+                          ? "You"
+                          : msg?.User?.username}
+                        {/* {msg.from} */}
+                      </div>
+                      <div className="chat-bubble">{msg?.message_text}</div>
+                      <div className="chat-footer opacity-50">Delivered</div>
+                      <time className="text-xs opacity-50">
+                        {convertTimestampToTime(msg?.createdAt)}
+                      </time>
                     </div>
-                    <div className="chat-header">
-                      {msg?.User?.username == localStorage.username ? "You" : msg?.User?.username}
-                      {/* {msg.from} */}
-                      <time className="text-xs opacity-50">{convertTimestampToTime(msg?.createdAt)}</time>
-                    </div>
-                    <div className="chat-bubble">{msg?.message_text}</div>
-                    <div className="chat-footer opacity-50">Delivered</div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
             {/* ch at container end */}
-
+            <div ref={bottomRef} />
             {/* input message */}
 
-            <div className=" absolute bottom-16 flex  w-full items-center border-t border-gray-300 p-2">
-              <form onSubmit={handleSubmit} className="">
-                <button className="text-gray-500">
-                  <span className="text-2xl">😊</span> {/* Emoji button */}
-                </button>
-                <input
-                  onChange={(e) => setSendMessage(e.target.value)}
-                  type="text"
-                  placeholder="Type message"
-                  className="input input-bordered flex-1 mx-2"
-                />
-                <button className="text-gray-500">
-                  {/* <Microphone className="w-5 h-5" /> Microphone icon */}
-                </button>
-                <button className="text-gray-500 ml-2">
-                  {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
-                </button>
-                <button className="btn w-20 btn-primary ml-2">Send</button>{" "}
-                {/* Send button */}
-              </form>
+            <div className=" absolute -bottom-40 flex w-full  items-center border-t border-gray-300 p-2">
+              <div className="flex w-full ">
+                <form onSubmit={handleSubmit} className="flex w-full">
+                  <button className="text-gray-500">
+                    <span className="text-2xl">😊</span> {/* Emoji button */}
+                  </button>
+                  <input
+                    onChange={(e) => setSendMessage(e.target.value)}
+                    type="text"
+                    placeholder="Type message"
+                    className="input input-bordered flex-1 w-full mx-2"
+                  />
+                  <button className="text-gray-500">
+                    {/* <Microphone className="w-5 h-5" /> Microphone icon */}
+                  </button>
+                  <button className="text-gray-500 ml-2">
+                    {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
+                  </button>
+                  <button className="btn w-20 btn-primary ml-2">Send</button>{" "}
+                  {/* Send button */}
+                </form>
+              </div>
             </div>
             {/* input message  end */}
           </div>
