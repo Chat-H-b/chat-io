@@ -137,11 +137,15 @@ export default function Home({ socket, url }) {
 
   // const isSocketInitialized = useRef(false);
   useEffect(() => {
+
+    fetchChat(roomId)
     // if (bottomRef.current) {
     //   bottomRef.current.scrollIntoView({ behavior: "smooth" });
     // }
     scrollToBottom();
+
   }, [message, roomDetail]);
+
 
   useEffect(() => {
     // if (isSocketInitialized.current) return;
@@ -151,7 +155,7 @@ export default function Home({ socket, url }) {
     };
 
     socket.connect();
-    fetchRoom();
+    fetchRoom(roomId);
   }, []);
 
   async function fetchRoom() {
@@ -181,7 +185,11 @@ export default function Home({ socket, url }) {
       setSendMessage((prev) => {
         return [...prev, newMessage, fetcMessage(roomId)];
       });
+
       // setSendMessage("");
+
+      setSendMessage("");
+      
     });
 
     return () => {
@@ -237,10 +245,13 @@ export default function Home({ socket, url }) {
                               <img
                                 src={
                                   el?.imageUrl ||
+
                                   `https://picsum.photos/150?random=${el.id}`
                                 }
                                 alt={`${el.name}'s avatar`}
                                 className="object-cover w-full h-full"
+
+                               
                               />
                             </div>
                           </div>

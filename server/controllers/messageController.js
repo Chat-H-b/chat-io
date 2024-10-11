@@ -34,10 +34,10 @@ class messageController {
     const { userId, email, username } = req.loginInfo;
     const { message_text } = req.body;
 
-    console.log(userId, email, username);
-
+  
     try {
       let finalMessageText;
+
 
       // Cek apakah ada file yang diupload
       if (req.file) {
@@ -52,6 +52,7 @@ class messageController {
         // Gunakan URL file sebagai message_text
         finalMessageText = fileUrl;
 
+
       } else if (message_text) {
         // Jika tidak ada file, gunakan teks dari body
         finalMessageText = message_text;
@@ -59,13 +60,15 @@ class messageController {
         return res.status(400).json({ message: "Message text or image is required" });
       }
 
+
+
       // Simpan message ke database
       const newMessage = await Message.create({
         roomId,
         userId,
         message_text: finalMessageText, // Teks atau URL file
       });
-
+  
       res.status(201).json(newMessage);
 
     } catch (error) {
@@ -73,7 +76,6 @@ class messageController {
       res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
   }
-
 
 }
 module.exports = messageController;
