@@ -61,8 +61,9 @@ io.on("connection", (socket) => {
         message,
       });
       console.log(
-        `Message from ${
-          socket.handshake.auth.username || "Anonymous"
+
+        `Message from ${socket.handshake.auth.username || "Anonymous"
+
         } in roomId ${roomId}: ${message}`
       );
     } else {
@@ -84,4 +85,6 @@ io.on("connection", (socket) => {
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
+
 });
+
