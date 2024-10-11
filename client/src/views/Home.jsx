@@ -4,13 +4,14 @@ import { themeContext } from "../context/ThemeContext";
 import axios from "axios";
 import EmojiPicker from "emoji-picker-react";
 import { useNavigate } from "react-router-dom";
-
+import { Send, Camera } from "lucide-react";
 export default function Home({ socket, url }) {
   const [room, setRoom] = useState([]);
-  const [roomName, setRoomName] = useState("");
+  const [roomDetail, setRoomDetail] = useState("");
   const [sendMessage, setSendMessage] = useState("");
   const [message, setMessage] = useState([]);
   const [roomId, setRoomId] = useState(0);
+  const [file, setFile] = useState(null);
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   // const bottomRef = useRef();
   const messageEndRef = useRef(null);
@@ -43,25 +44,6 @@ export default function Home({ socket, url }) {
     navigate("/login");
   }
 
-  // function handleRoom(roomName, roomId) {
-  //   setRoomId(roomId);
-  //   if (roomName === currentRoom) return;
-  //   setCurrentRoom(roomName);
-  //   socket.emit("join:room", roomName);
-  //   setMessage([]);
-  // }
-  // const rooms = [
-  //   {
-  //     id: 1,
-  //     name: "General Chat",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Project Alpha",
-  //   },
-  //   // Add more room objects as needed
-  // ];
-
   async function fetchRoom() {
     try {
       const { data } = await axios.get(`${url}/rooms`, {
@@ -83,7 +65,7 @@ export default function Home({ socket, url }) {
           Authorization: `Bearer ${localStorage.access_token}`,
         },
       });
-      console.log(data);
+      // console.log(data);
       console.log("success");
 
       setMessage(data);
@@ -95,38 +77,28 @@ export default function Home({ socket, url }) {
       console.log(error);
     }
   }
-  async function fetchRoomName(roomId) {
+  async function fetchRoomDetail(roomId) {
     try {
       const { data } = await axios.get(`${url}/rooms/${roomId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.access_token}`,
         },
       });
-      setRoomName(data);
+      setRoomDetail(data);
     } catch (error) {
       console.log(error);
     }
   }
-  // useEffect(() => {
-  //   fetcMessage();
-  // }, []);
-
-  // useEffect(() => {
-  //   // setRoom(rooms);
-  //   fetchRoom();
-  // }, []);
-
-  // useEffect(() => {
-  //   console.log(room); // Log when room state updates
-  //   console.log(roomId); // Log when room state updates
-  //   console.log(message); // Log when room state updates
-  // }, [room, roomId, message]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-
-    if (sendMessage.trim() === "") return; // Avoid sending empty messages
-
+    const formData = new FormData();
+    if (sendMessage.trim() === "" && !file) return;
+    formData.append("image", file);
+    if (file) {
+      socket.emit("message:new", { roomId, message: file });
+    }
+    formData.append("message_text", sendMessage);
     socket.emit("message:new", { roomId, message: sendMessage });
 
     if (roomId == 0) {
@@ -135,20 +107,17 @@ export default function Home({ socket, url }) {
     }
 
     try {
-      const { data } = await axios.post(
-        `${url}/chat/${roomId}`,
-        { message_text: sendMessage },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.access_token}`,
-          },
-        }
-      );
+      const { data } = await axios.post(`${url}/chat/${roomId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.access_token}`,
+        },
+      });
       console.log("success add nwe message");
 
       // setMessage(data);
       fetcMessage(roomId);
       setSendMessage("");
+      setFile(null);
     } catch (error) {
       console.log(error);
     }
@@ -172,7 +141,7 @@ export default function Home({ socket, url }) {
     //   bottomRef.current.scrollIntoView({ behavior: "smooth" });
     // }
     scrollToBottom();
-  }, [message, roomName]);
+  }, [message, roomDetail]);
 
   useEffect(() => {
     // if (isSocketInitialized.current) return;
@@ -184,18 +153,6 @@ export default function Home({ socket, url }) {
     socket.connect();
     fetchRoom();
   }, []);
-
-  async function fetchChat(roomId) {
-    try {
-      const { data } = await axios.get(`${url}/chat/${roomId}`, {
-        headers: { Authorization: `Bearer ${localStorage.access_token}` },
-      });
-      console.log(data);
-      setChat(data);
-    } catch (error) {
-      console.log(error);
-    }
-  }
 
   async function fetchRoom() {
     try {
@@ -224,7 +181,7 @@ export default function Home({ socket, url }) {
       setSendMessage((prev) => {
         return [...prev, newMessage, fetcMessage(roomId)];
       });
-      setSendMessage("");
+      // setSendMessage("");
     });
 
     return () => {
@@ -245,28 +202,16 @@ export default function Home({ socket, url }) {
           <div className="mx-4 flex  gap-7 flex-col">
             <div>
               <div>
-                <button
-                  onClick={handleLogout}
-                  className="bg-cyan-500 p-4 rounded-lg w-40 font-bold flex justify-center">
-                  Logout
-                </button>
-              </div>
-              <div>
                 <a className="btn text-blue-400 btn-ghost text-xl">Chat Hub</a>
               </div>
               <div className="flex-none  gap-2">
-                {/* <div className="form-control ">
+                <div className="form-control ">
                   <input
                     type="text"
                     placeholder="Search"
                     className="input input-bordered w-24 md:w-auto"
                   />
-                </div> */}
-                <button className="flex justify-center bg-red-400 w-40 p-4 m-2 rounded-lg">
-                  <p className="font-bold" onClick={handleLogout}>
-                    Logout
-                  </p>
-                </button>
+                </div>
               </div>
             </div>
             {/* chat section */}
@@ -282,7 +227,7 @@ export default function Home({ socket, url }) {
                           return (
                             fetcMessage(el.id),
                             setRoomId(el.id),
-                            fetchRoomName(el.id)
+                            fetchRoomDetail(el.id)
                           );
                         }}>
                         <div className="flex gap-4 cursor-pointer hover:bg-slate-200 hover:p-2 transition-all duration-300 rounded-lg border-b-2 pb-2">
@@ -293,10 +238,9 @@ export default function Home({ socket, url }) {
                                 src={
                                   el?.imageUrl ||
                                   `https://picsum.photos/150?random=${el.id}`
-                                } // Gambar acak dari Lorem Picsum jika imageUrl kosong
-                                // src="https://www.michaelpage.co.id/sites/michaelpage.co.id/files/2022-05/Software%20Developer.jpg"
-                                alt={`${el.name}'s avatar`} // Teks alt untuk aksesibilitas
-                                className="object-cover w-full h-full" // Mengatur gambar agar sesuai dengan ukuran kontainer
+                                }
+                                alt={`${el.name}'s avatar`}
+                                className="object-cover w-full h-full"
                               />
                             </div>
                           </div>
@@ -310,46 +254,42 @@ export default function Home({ socket, url }) {
                     );
                   })}
 
-                {room.map((e) => (
-                  <li>
-                    <button
-                      className="flex gap-4  border-b-2 pb-2"
-                      onClick={() => fetchChat(e.id)}>
-                      {/* avatar */}
-                      <div className="avatar">
-                        <div className="w-14 rounded-full">
-                          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                        </div>
-                      </div>
-                      {/* end avatar */}
-                      <div className="flex text-slate-500 mt-1 flex-col">
-                        <span>{e.name}</span>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-
                 {/* end group chat */}
               </ul>
-              <div>
-                <button
-                  className=" btn bg-green-700 p-4 ml-3 rounded-lg"
-                  onClick={() => navigate("/add-room")}>
-                  Add Room
-                </button>
-              </div>
+            </div>
+            <div className="flex flex-col gap-9">
+              <button
+                className=" btn hover:bg-blue-400"
+                onClick={() => navigate("/add-room")}>
+                Add A New Room
+              </button>
             </div>
           </div>
         </div>
         {/* side bar end */}
         {/* top bar */}
         <div className="w-full flex relative flex-col h-screen  ">
-          <div className="drop-shadow-2xl absolute top-48 z-30 pb-9 h-11 navbar flex text-center   bg-base-100">
-            <div className="flex w-full text-center">
-              <h1 className="font-bold mt-5 ml-6 text-black">
-                {roomName ? roomName : "global"}
-              </h1>
-              <div className="flex justify-end mt-4 w-[80%]">
+          <div className="drop-shadow-2xl  absolute top-48 z-30 pb-9 h-20 navbar flex text-center   bg-base-100">
+            <div className="flex w-full pt-6 justify-center items-center text-center">
+              <div className="flex justify-start ml-5 w-1/2 items-center">
+                {/* avatar */}
+                <div className="avatar">
+                  <div className="w-14 h-14 rounded-full overflow-hidden">
+                    <img
+                      src={
+                        roomDetail?.imageUrl ||
+                        `https://picsum.photos/150?random=${roomDetail.id}`
+                      }
+                      alt={`${roomDetail.name}'s avatar`}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                </div>
+                <h1 className="font-bold  ml-6 text-black">
+                  {roomDetail.name ? roomDetail.name : "global"}
+                </h1>
+              </div>
+              <div className="flex justify-end   w-[80%]">
                 {currentTheme == "light" ? (
                   <svg
                     className="swap-on h-10 w-10 fill-current"
@@ -367,6 +307,14 @@ export default function Home({ socket, url }) {
                     <path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
                   </svg>
                 )}
+              </div>
+              <div>
+                <button
+                  className="btn hover:bg-secondary mx-4"
+                  onClick={handleLogout}>
+                  {" "}
+                  Logout
+                </button>
               </div>
             </div>
           </div>
@@ -419,7 +367,9 @@ export default function Home({ socket, url }) {
                           ? "You"
                           : msg?.User?.username}
                       </div>
-                      <div className="chat-bubble">{msg?.message_text}</div>
+                      <div className="chat-bubble">
+                        <p> {msg?.message_text}</p>
+                      </div>
                       <div className="chat-footer opacity-50">Delivered</div>
                       <time className="text-xs opacity-50">
                         {convertTimestampToTime(msg?.createdAt)}
@@ -435,35 +385,42 @@ export default function Home({ socket, url }) {
             <div />
             {/* input message */}
 
-            <div className="absolute -bottom-40 flex w-full items-center border-t border-gray-300 p-2">
+            <div className="absolute -bottom-44 flex w-full items-center border-t border-gray-300 p-2">
               <div className="flex w-full ">
                 <form onSubmit={handleSubmit} className="flex w-full">
-                  <button
-                    type="button"
-                    className="text-gray-500"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-                    <span className="text-2xl">😊</span> {/* Emoji button */}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="text-gray-500"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+                      <span className="text-2xl">😊</span> {/* Emoji button */}
+                    </button>
+                    <label htmlFor="dropzone-file" className=" mt-4">
+                      <Camera />
+                      <input
+                        id="dropzone-file"
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => setFile(e.target.files[0])} // Handle file selection
+                      />
+                    </label>
+                  </div>
                   {showEmojiPicker && (
                     <div className="absolute bottom-16 left-0">
                       <EmojiPicker onEmojiClick={handleEmojiClick} />
                     </div>
                   )}
                   <input
-                    value={sendMessage}
+                    value={file ? file.orignalname : sendMessage}
                     onChange={(e) => setSendMessage(e.target.value)}
                     type="text"
                     placeholder="Type message"
                     className="input input-bordered flex-1 w-full mx-2"
                   />
-                  <button className="text-gray-500" type="button">
-                    {/* <Microphone className="w-5 h-5" /> Microphone icon */}
-                  </button>
-                  <button className="text-gray-500 ml-2" type="button">
-                    {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
-                  </button>
-                  <button className="btn w-20 btn-primary ml-2" type="submit">
-                    Send
+                  <button
+                    className="btn w-20 hover:bg-blue-400 ml-2"
+                    type="submit">
+                    <Send />
                   </button>{" "}
                 </form>
               </div>

@@ -33,36 +33,47 @@ class messageController {
     const { roomId } = req.params;
     const { userId, email, username } = req.loginInfo;
     const { message_text } = req.body;
+
     console.log(userId, email, username);
 
     try {
-      // Check if a file is uploaded
-      // if (!req.file) {
-      //   return res.status(400).json({ message: "Image is required" });
-      // }
+      let finalMessageText;
 
-      // // Log the file details to check if path or secure_url is present
-      // console.log("File details:", req.file);
+      // Cek apakah ada file yang diupload
+      if (req.file) {
+        console.log("File uploaded: ", req.file); // Log file info
 
-      // // Save the file's path (or secure URL if you're using Cloudinary)
-      // const fileUrl = req.file.path || req.file.secure_url;
+        const fileUrl = req.file.path || req.file.secure_url; // Path dari Multer atau URL dari Cloudinary
 
-      // if (!fileUrl) {
-      //   return res.status(500).json({ message: "Failed to upload image" });
-      // }
+        if (!fileUrl) {
+          return res.status(500).json({ message: "Failed to upload image" });
+        }
 
-      // Create a new message with the image URL as message_text
+        // Gunakan URL file sebagai message_text
+        finalMessageText = fileUrl;
+
+      } else if (message_text) {
+        // Jika tidak ada file, gunakan teks dari body
+        finalMessageText = message_text;
+      } else {
+        return res.status(400).json({ message: "Message text or image is required" });
+      }
+
+      // Simpan message ke database
       const newMessage = await Message.create({
         roomId,
         userId,
-        message_text, // Save the file URL instead of the whole object
+        message_text: finalMessageText, // Teks atau URL file
       });
 
       res.status(201).json(newMessage);
+
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Internal Server Error" });
+      console.error("Error during message creation:", error); // Tampilkan error di console
+      res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
   }
+
+
 }
 module.exports = messageController;

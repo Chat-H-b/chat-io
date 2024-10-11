@@ -12,10 +12,10 @@ class roomController {
     }
 
     static async readRoomDetail(req, res, next) {
-        const {id} = req.params
+        const { id } = req.params
         try {
             const room = await Room.findByPk(id)
-            res.status(200).json(room.name)
+            res.status(200).json(room)
         } catch (error) {
             console.log(error);
 
@@ -25,12 +25,12 @@ class roomController {
     static async addRoom(req, res, next) {
         const { name, imageUrl } = req.body
         try {
-            const room = await Room.create({name, imageUrl})
+            const room = await Room.create({ name, imageUrl })
 
             res.status(201).json(room)
         } catch (error) {
             console.log(error);
-            
+
         }
     }
 }
