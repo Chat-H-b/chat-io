@@ -4,9 +4,9 @@ const multer = require('multer');
 
 // Konfigurasi Cloudinary
 cloudinary.config({
-  cloud_name: 'dqczvxzoq',
-  api_key: '969926655166495',
-  api_secret: 'uiEdRSngL2HRT1ABhbzjA5mx9-Q'
+  cloud_name: "dqczvxzoq",
+  api_key: "969926655166495",
+  api_secret: "uiEdRSngL2HRT1ABhbzjA5mx9-Q"
 });
 
 // Set up Cloudinary storage untuk Multer

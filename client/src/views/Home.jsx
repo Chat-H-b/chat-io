@@ -154,6 +154,14 @@ export default function Home({ socket, url }) {
     }
   }
 
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      console.log('Selected file:', file);
+      // Lakukan proses upload gambar di sini
+    }
+  };
+
   function convertTimestampToTime(timestamp) {
     // Parse timestamp menjadi Date object
     const date = new Date(timestamp);
@@ -210,6 +218,8 @@ export default function Home({ socket, url }) {
       console.log(error);
     }
   }
+
+
   useEffect(() => {
     socket.auth = {
       username: localStorage.username,
@@ -437,16 +447,30 @@ export default function Home({ socket, url }) {
             {/* ch at container end */}
             <div />
             {/* input message */}
-
             <div className="absolute -bottom-40 flex w-full items-center border-t border-gray-300 p-2">
-              <div className="flex w-full ">
+              <div className="flex w-full">
                 <form onSubmit={handleSubmit} className="flex w-full">
+                  {/* Emoji button */}
                   <button
                     type="button"
                     className="text-gray-500"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-                    <span className="text-2xl">😊</span> {/* Emoji button */}
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  >
+                    <span className="text-2xl">😊</span>
                   </button>
+                  
+                  {/* Image upload button */}
+                  <label htmlFor="file-upload" className="text-gray-500 ml-2 cursor-pointer">
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+                    <span className="text-2xl">📷</span> {/* Image upload icon */}
+                  </label>
+
                   {showEmojiPicker && (
                     <div className="absolute bottom-16 left-0">
                       <EmojiPicker onEmojiClick={handleEmojiClick} />
@@ -460,18 +484,19 @@ export default function Home({ socket, url }) {
                     className="input input-bordered flex-1 w-full mx-2"
                   />
                   <button className="text-gray-500" type="button">
-                    {/* <Microphone className="w-5 h-5" /> Microphone icon */}
+                    {/* Microphone icon */}
                   </button>
                   <button className="text-gray-500 ml-2" type="button">
-                    {/* <Paperclip className="w-5 h-5" /> Attachment icon */}
+                    {/* Attachment icon */}
                   </button>
                   <button className="btn w-20 btn-primary ml-2" type="submit">
                     Send
-                  </button>{" "}
+                  </button>
                 </form>
               </div>
             </div>
             {/* input message  end */}
+
           </div>
         </div>
         {/* main content end */}
