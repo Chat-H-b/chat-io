@@ -39,7 +39,7 @@ class messageController {
 
       // Cek apakah ada file yang diupload
       if (req.file) {
-        console.log("File uploaded: ", req.file); // Log file info
+        // console.log("File uploaded: ", req.file); // Log file info
 
         const fileUrl = req.file.path || req.file.secure_url; // Path dari Multer atau URL dari Cloudinary
 

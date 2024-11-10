@@ -1,3 +1,7 @@
+// if (process.env.NODE_ENV !== "production") {
+// }
+require("dotenv").config();
+
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
@@ -13,7 +17,7 @@ const upload = require("./utils/multer");
 // const upload = require("../")
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -59,7 +63,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message:new", ({ roomId, message }) => {
-    if (roomId || message) {
+    if (roomId && message) {
       // Emit the new message to all clients in the specified roomId
       io.to(roomId).emit("message:update", {
         from: socket.handshake.auth.username || "Anonymous",
@@ -68,7 +72,7 @@ io.on("connection", (socket) => {
       console.log(
         `Message from ${
           socket.handshake.auth.username || "Anonymous"
-        } in roomId ${roomId}: ${message}`
+        } in roomId ${roomId}:ld;fmdsl; ${message}`
       );
     } else {
       console.log("Invalid message data received:", { roomId, message });
@@ -87,6 +91,6 @@ io.on("connection", (socket) => {
 
 // socket.on("message:new")
 
-server.listen(port, () => {
-  console.log(`http://localhost:${port}`);
+server.listen(PORT, () => {
+  console.log(`http://localhost:${PORT}`);
 });
