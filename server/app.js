@@ -12,14 +12,13 @@ const authentication = require("./middlewares/authentication");
 const upload = require("./utils/multer");
 // const upload = require("../")
 
-
 const app = express();
 const port = 3000;
 
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173"],
   },
 });
 
@@ -37,11 +36,17 @@ app.post("/rooms", roomController.addRoom);
 app.get("/rooms/:id", roomController.readRoomDetail);
 
 app.get("/chat/:roomId", messageController.readMessage);
-app.post("/chat/:roomId", upload.single('image'), messageController.createMessage);
+app.post(
+  "/chat/:roomId",
+  upload.single("image"),
+  messageController.createMessage
+);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+  res
+    .status(500)
+    .json({ message: "Something went wrong!", error: err.message });
 });
 
 io.on("connection", (socket) => {
@@ -61,9 +66,8 @@ io.on("connection", (socket) => {
         message,
       });
       console.log(
-
-        `Message from ${socket.handshake.auth.username || "Anonymous"
-
+        `Message from ${
+          socket.handshake.auth.username || "Anonymous"
         } in roomId ${roomId}: ${message}`
       );
     } else {
@@ -85,6 +89,4 @@ io.on("connection", (socket) => {
 
 server.listen(port, () => {
   console.log(`http://localhost:${port}`);
-
 });
-

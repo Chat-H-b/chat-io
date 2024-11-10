@@ -137,15 +137,11 @@ export default function Home({ socket, url }) {
 
   // const isSocketInitialized = useRef(false);
   useEffect(() => {
-
-    fetchChat(roomId)
     // if (bottomRef.current) {
     //   bottomRef.current.scrollIntoView({ behavior: "smooth" });
     // }
     scrollToBottom();
-
   }, [message, roomDetail]);
-
 
   useEffect(() => {
     // if (isSocketInitialized.current) return;
@@ -189,7 +185,6 @@ export default function Home({ socket, url }) {
       // setSendMessage("");
 
       setSendMessage("");
-      
     });
 
     return () => {
@@ -245,13 +240,10 @@ export default function Home({ socket, url }) {
                               <img
                                 src={
                                   el?.imageUrl ||
-
                                   `https://picsum.photos/150?random=${el.id}`
                                 }
                                 alt={`${el.name}'s avatar`}
                                 className="object-cover w-full h-full"
-
-                               
                               />
                             </div>
                           </div>
@@ -379,8 +371,17 @@ export default function Home({ socket, url }) {
                           : msg?.User?.username}
                       </div>
                       <div className="chat-bubble">
-                        <p> {msg?.message_text}</p>
+                        {msg?.message_text?.startsWith("http") ? (
+                          <img
+                            src={msg.message_text}
+                            alt="Message Image"
+                            className="message-image"
+                          />
+                        ) : (
+                          <p>{msg?.message_text}</p>
+                        )}
                       </div>
+
                       <div className="chat-footer opacity-50">Delivered</div>
                       <time className="text-xs opacity-50">
                         {convertTimestampToTime(msg?.createdAt)}
