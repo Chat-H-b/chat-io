@@ -1,15 +1,14 @@
-const jwt = require('jsonwebtoken');
-const secretKey = 'dwiki'
-
+const jwt = require("jsonwebtoken");
+const secretKey = "haha";
 
 //encode atau encrypt
 const signToken = (payload) => {
-    return jwt.sign(payload, secretKey)
-}
+  return jwt.sign(payload, secretKey);
+};
 
 //decode atau decrypt
 const verifyToken = (token) => {
-    return jwt.verify(token, secretKey)
-}
+  return jwt.verify(token, secretKey);
+};
 
-module.exports = { signToken, verifyToken }
+module.exports = { signToken, verifyToken };
