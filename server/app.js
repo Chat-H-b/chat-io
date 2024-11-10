@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
@@ -13,7 +17,7 @@ const upload = require("./utils/multer");
 // const upload = require("../")
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -87,6 +91,6 @@ io.on("connection", (socket) => {
 
 // socket.on("message:new")
 
-server.listen(port, () => {
-  console.log(`http://localhost:${port}`);
+server.listen(PORT, () => {
+  console.log(`http://localhost:${PORT}`);
 });

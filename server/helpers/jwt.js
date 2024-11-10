@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const secretKey = 'dwiki'
+const secretKey = "chat-io"
 
 
 //encode atau encrypt
