@@ -34,14 +34,12 @@ class messageController {
     const { userId, email, username } = req.loginInfo;
     const { message_text } = req.body;
 
-  
     try {
       let finalMessageText;
 
-
       // Cek apakah ada file yang diupload
       if (req.file) {
-        console.log("File uploaded: ", req.file); // Log file info
+        // console.log("File uploaded: ", req.file); // Log file info
 
         const fileUrl = req.file.path || req.file.secure_url; // Path dari Multer atau URL dari Cloudinary
 
@@ -51,16 +49,14 @@ class messageController {
 
         // Gunakan URL file sebagai message_text
         finalMessageText = fileUrl;
-
-
       } else if (message_text) {
         // Jika tidak ada file, gunakan teks dari body
         finalMessageText = message_text;
       } else {
-        return res.status(400).json({ message: "Message text or image is required" });
+        return res
+          .status(400)
+          .json({ message: "Message text or image is required" });
       }
-
-
 
       // Simpan message ke database
       const newMessage = await Message.create({
@@ -68,14 +64,14 @@ class messageController {
         userId,
         message_text: finalMessageText, // Teks atau URL file
       });
-  
-      res.status(201).json(newMessage);
 
+      res.status(201).json(newMessage);
     } catch (error) {
       console.error("Error during message creation:", error); // Tampilkan error di console
-      res.status(500).json({ message: "Internal Server Error", error: error.message });
+      res
+        .status(500)
+        .json({ message: "Internal Server Error", error: error.message });
     }
   }
-
 }
 module.exports = messageController;

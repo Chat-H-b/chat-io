@@ -12,6 +12,7 @@ export default function Home({ socket, url }) {
   const [message, setMessage] = useState([]);
   const [roomId, setRoomId] = useState(0);
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false); // Loading state
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   // const bottomRef = useRef();
   const messageEndRef = useRef(null);
@@ -51,7 +52,7 @@ export default function Home({ socket, url }) {
           Authorization: `Bearer ${localStorage.access_token}`,
         },
       });
-      console.log(data);
+      // console.log(data);
       setRoom(data);
     } catch (error) {
       console.log(error);
@@ -94,13 +95,18 @@ export default function Home({ socket, url }) {
     e.preventDefault();
     const formData = new FormData();
     if (sendMessage.trim() === "" && !file) return;
-    formData.append("image", file);
+    console.log("masukkkkkkkkkkkkkkkkkkkkkkkkkkk");
+
+    // console.log(file, ">>>>>>>>>>>>>>>>>>> ini file di home");
     if (file) {
-      socket.emit("message:new", { roomId, message: file });
+      formData.append("image", file);
+      setLoading(true);
+
+      socket.emit("message:new", { roomId, message: formData });
     }
     formData.append("message_text", sendMessage);
     socket.emit("message:new", { roomId, message: sendMessage });
-
+    setLoading(false);
     if (roomId == 0) {
       console.error("roomId is not set!");
       return;
@@ -159,7 +165,7 @@ export default function Home({ socket, url }) {
       const { data } = await axios.get(`${url}/rooms`, {
         headers: { Authorization: `Bearer ${localStorage.access_token}` },
       });
-      console.log(data);
+      // console.log(data);
       setRoom(data);
     } catch (error) {
       console.log(error);
@@ -380,6 +386,8 @@ export default function Home({ socket, url }) {
                         ) : (
                           <p>{msg?.message_text}</p>
                         )}
+                        {loading && <p>Uploading image...</p>}{" "}
+                        {/* Loading indicator */}
                       </div>
 
                       <div className="chat-footer opacity-50">Delivered</div>

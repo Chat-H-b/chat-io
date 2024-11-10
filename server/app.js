@@ -59,7 +59,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("message:new", ({ roomId, message }) => {
-    if (roomId || message) {
+    if (roomId && message) {
       // Emit the new message to all clients in the specified roomId
       io.to(roomId).emit("message:update", {
         from: socket.handshake.auth.username || "Anonymous",
@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
       console.log(
         `Message from ${
           socket.handshake.auth.username || "Anonymous"
-        } in roomId ${roomId}: ${message}`
+        } in roomId ${roomId}:ld;fmdsl; ${message}`
       );
     } else {
       console.log("Invalid message data received:", { roomId, message });
