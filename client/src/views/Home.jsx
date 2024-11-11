@@ -12,7 +12,6 @@ export default function Home({ socket, url }) {
   const [message, setMessage] = useState([]);
   const [roomId, setRoomId] = useState(0);
   const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false); // Loading state
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   // const bottomRef = useRef();
   const messageEndRef = useRef(null);
@@ -52,7 +51,7 @@ export default function Home({ socket, url }) {
           Authorization: `Bearer ${localStorage.access_token}`,
         },
       });
-      // console.log(data);
+      console.log(data);
       setRoom(data);
     } catch (error) {
       console.log(error);
@@ -93,32 +92,11 @@ export default function Home({ socket, url }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-<<<<<<< HEAD
     if (!sendMessage.trim() && !file) return;
 
     const formData = new FormData();
     if (file) formData.append("image", file);
     if (sendMessage.trim()) formData.append("message_text", sendMessage);
-=======
-    const formData = new FormData();
-    if (sendMessage.trim() === "" && !file) return;
-    console.log("masukkkkkkkkkkkkkkkkkkkkkkkkkkk");
-
-    // console.log(file, ">>>>>>>>>>>>>>>>>>> ini file di home");
-    if (file) {
-      formData.append("image", file);
-      setLoading(true);
-
-      socket.emit("message:new", { roomId, message: formData });
-    }
-    formData.append("message_text", sendMessage);
-    socket.emit("message:new", { roomId, message: sendMessage });
-    setLoading(false);
-    if (roomId == 0) {
-      console.error("roomId is not set!");
-      return;
-    }
->>>>>>> bbb9f72d73d29efbd2780298ef10ca609d4babbc
 
     try {
       const { data: newMessage } = await axios.post(
@@ -166,31 +144,6 @@ export default function Home({ socket, url }) {
   }, [message, roomDetail]);
 
   useEffect(() => {
-<<<<<<< HEAD
-=======
-    // if (isSocketInitialized.current) return;
-
-    socket.auth = {
-      email: localStorage.email,
-    };
-
-    socket.connect();
-    fetchRoom(roomId);
-  }, []);
-
-  async function fetchRoom() {
-    try {
-      const { data } = await axios.get(`${url}/rooms`, {
-        headers: { Authorization: `Bearer ${localStorage.access_token}` },
-      });
-      // console.log(data);
-      setRoom(data);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-  useEffect(() => {
->>>>>>> bbb9f72d73d29efbd2780298ef10ca609d4babbc
     socket.auth = {
       username: localStorage.username,
     };
@@ -401,8 +354,6 @@ export default function Home({ socket, url }) {
                         ) : (
                           <p>{msg?.message_text}</p>
                         )}
-                        {loading && <p>Uploading image...</p>}{" "}
-                        {/* Loading indicator */}
                       </div>
 
                       <div className="chat-footer opacity-50">Delivered</div>
