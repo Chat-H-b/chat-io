@@ -1,6 +1,6 @@
 const { Message, User, Room } = require("../models");
 const user = require("../models/user");
-
+const cloudinary = require("../utils/cloudinary");
 class messageController {
   static async readMessage(req, res) {
     const { roomId } = req.params;
@@ -40,15 +40,24 @@ class messageController {
       // Cek apakah ada file yang diupload
       if (req.file) {
         console.log("File uploaded: ", req.file); // Log file info
+        const cloudinaryUpload = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              use_filename: true,
+              unique_filename: true,
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+          uploadStream.end(req.file.buffer); // Send buffer to Cloudinary
+        });
 
-        const fileUrl = req.file.path || req.file.secure_url; // Path dari Multer atau URL dari Cloudinary
-
-        if (!fileUrl) {
-          return res.status(500).json({ message: "Failed to upload image" });
-        }
+        const imageUrl = cloudinaryUpload.secure_url;
 
         // Gunakan URL file sebagai message_text
-        finalMessageText = fileUrl;
+        finalMessageText = imageUrl;
       } else if (message_text) {
         // Jika tidak ada file, gunakan teks dari body
         finalMessageText = message_text;

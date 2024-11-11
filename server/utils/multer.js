@@ -1,28 +1,8 @@
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const multer = require('multer');
+//menjadikan multer sebagai buffer agar bisa disimpan imagekit
+const multer = require("multer");
+// membuat storage
+//menjadikan buffer
 
-// Konfigurasi Cloudinary
-cloudinary.config({
-
-  cloud_name: 'dqczvxzoq',
-  api_key: '969926655166495',
-  api_secret: 'uiEdRSngL2HRT1ABhbzjA5mx9-Q'
-
-});
-
-// Set up Cloudinary storage untuk Multer
-const storage = new CloudinaryStorage({
-
-  cloudinary: cloudinary,
-  params: {
-    folder: 'Dynamic folders', // Nama folder di Cloudinary
-    allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'], // Format gambar yang diizinkan
-    transformation: [{ width: 500, height: 500, crop: 'limit' }] // Optional: bisa juga melakukan transformasi ukuran file
-  },
-
-});
-
-const upload = multer({ storage });
-
+const storage = multer.memoryStorage(); // Store file in memory
+const upload = multer({ storage: storage }).single("image"); // You can also set file size limits or file types
 module.exports = upload;

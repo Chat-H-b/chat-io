@@ -92,36 +92,36 @@ export default function Home({ socket, url }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const formData = new FormData();
-    if (sendMessage.trim() === "" && !file) return;
-    formData.append("image", file);
-    if (file) {
-      socket.emit("message:new", { roomId, message: file });
-    }
-    formData.append("message_text", sendMessage);
-    socket.emit("message:new", { roomId, message: sendMessage });
+    if (!sendMessage.trim() && !file) return;
 
-    if (roomId == 0) {
-      console.error("roomId is not set!");
-      return;
-    }
+    const formData = new FormData();
+    if (file) formData.append("image", file);
+    if (sendMessage.trim()) formData.append("message_text", sendMessage);
 
     try {
-      const { data } = await axios.post(`${url}/chat/${roomId}`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.access_token}`,
-        },
-      });
-      console.log("success add nwe message");
+      const { data: newMessage } = await axios.post(
+        `${url}/chat/${roomId}`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${localStorage.access_token}` },
+        }
+      );
 
-      // setMessage(data);
-      fetcMessage(roomId);
+      // Emit the new message to update other clients
+      socket.emit("message:new", newMessage);
+      // Update message state without fetching all messages
+      setMessage((prevMessages) => [...prevMessages, newMessage]);
+
+      // Reset the form
       setSendMessage("");
       setFile(null);
     } catch (error) {
-      console.log(error);
+      console.error("Error sending message:", error);
+      // Display error feedback to the user
     }
   }
+
+  // Message rendering (within the JSX)
 
   function convertTimestampToTime(timestamp) {
     // Parse timestamp menjadi Date object
@@ -144,28 +144,6 @@ export default function Home({ socket, url }) {
   }, [message, roomDetail]);
 
   useEffect(() => {
-    // if (isSocketInitialized.current) return;
-
-    socket.auth = {
-      email: localStorage.email,
-    };
-
-    socket.connect();
-    fetchRoom(roomId);
-  }, []);
-
-  async function fetchRoom() {
-    try {
-      const { data } = await axios.get(`${url}/rooms`, {
-        headers: { Authorization: `Bearer ${localStorage.access_token}` },
-      });
-      console.log(data);
-      setRoom(data);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-  useEffect(() => {
     socket.auth = {
       username: localStorage.username,
     };
@@ -177,14 +155,7 @@ export default function Home({ socket, url }) {
     });
 
     socket.on("message:update", (newMessage) => {
-      console.log(newMessage);
-      setSendMessage((prev) => {
-        return [...prev, newMessage, fetcMessage(roomId)];
-      });
-
-      // setSendMessage("");
-
-      setSendMessage("");
+      fetcMessage(roomId);
     });
 
     return () => {
@@ -194,6 +165,9 @@ export default function Home({ socket, url }) {
       // isSocketInitialized.current = false;
     };
   }, [roomId]);
+  useEffect(() => {
+    console.log(file?.name);
+  }, [file]);
   return (
     <>
       <div
@@ -423,7 +397,7 @@ export default function Home({ socket, url }) {
                     </div>
                   )}
                   <input
-                    value={file ? file.orignalname : sendMessage}
+                    value={file ? file?.name : sendMessage}
                     onChange={(e) => setSendMessage(e.target.value)}
                     type="text"
                     placeholder="Type message"
