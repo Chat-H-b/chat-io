@@ -6,7 +6,6 @@ const authentication = async (req, res, next) => {
     const { authorization } = req.headers;
 
     if (!authorization) throw { name: "Unauthorized" };
-    console.log(authorization ,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
     const access_token = authorization.split(" ")[1];
 
