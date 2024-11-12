@@ -12,6 +12,7 @@ export default function Home({ socket, url }) {
   const [message, setMessage] = useState([]);
   const [roomId, setRoomId] = useState(0);
   const [file, setFile] = useState(null);
+  
   const { currentTheme, theme, setCurrentTheme } = useContext(themeContext);
   // const bottomRef = useRef();
   const messageEndRef = useRef(null);
@@ -95,34 +96,31 @@ export default function Home({ socket, url }) {
     if (!sendMessage.trim() && !file) return;
 
     const formData = new FormData();
-    if (file) formData.append("image", file);
-    if (sendMessage.trim()) formData.append("message_text", sendMessage);
+    if (file) {
+      formData.append("image", file);
+      socket.emit("message:new", {
+        roomId,
+        message: URL.createObjectURL(file),
+      });
+    }
+    if (sendMessage.trim()) {
+      formData.append("message_text", sendMessage);
+      socket.emit("message:new", { roomId, message: sendMessage });
+    }
 
     try {
-      const { data: newMessage } = await axios.post(
-        `${url}/chat/${roomId}`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${localStorage.access_token}` },
-        }
-      );
-
-      // Emit the new message to update other clients
-      socket.emit("message:new", newMessage);
-      // Update message state without fetching all messages
-      setMessage((prevMessages) => [...prevMessages, newMessage]);
-
-      // Reset the form
+      await axios.post(`${url}/chat/${roomId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.access_token}`,
+        },
+      });
+      await fetcMessage(roomId); // Refresh messages after sending
       setSendMessage("");
       setFile(null);
     } catch (error) {
-      console.error("Error sending message:", error);
-      // Display error feedback to the user
+      console.log(error);
     }
   }
-
-  // Message rendering (within the JSX)
-
   function convertTimestampToTime(timestamp) {
     // Parse timestamp menjadi Date object
     const date = new Date(timestamp);
@@ -155,7 +153,8 @@ export default function Home({ socket, url }) {
     });
 
     socket.on("message:update", (newMessage) => {
-      fetcMessage(roomId);
+      console.log(newMessage);
+      return fetcMessage(roomId);
     });
 
     return () => {
